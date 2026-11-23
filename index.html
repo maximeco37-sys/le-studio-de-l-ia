@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Le Studio de l’IA</title>
+
+<script>
+/* =====================================================================
+   CONFIG : LA PARTIE À MODIFIER
+   ---------------------------------------------------------------------
+   Vous pouvez changer ici les questions, les durées, les couleurs et
+   les textes, sans toucher au reste du fichier.
+   Règles d’écriture :
+   - chaque texte est entre guillemets "…" ;
+   - chaque ligne se termine par une virgule ;
+   - « bonne » indique la bonne réponse : 1 = la 1re de la liste,
+     2 = la 2e, etc. Le jeu mélange ensuite l’ordre des réponses.
+   - « effet » dit ce qui apparaît dans le studio après la question
+     (lumieres, persona, appel, sujet, decor, ambiance, cadrage, orbite).
+   ===================================================================== */
+const CONFIG = {
+
+  /* ---------- 1. LES 8 ÉTAPES (une question chacune) ---------- */
+  questions: [
+    {
+      theme: "publication", etape: "Le Skill",
+      question: "Un Skill (une compétence), c’est…",
+      reponses: ["Une méthode que l’IA réutilise", "Un nouveau réseau social", "Une IA qui publie toute seule", "Un abonnement obligatoire"],
+      bonne: 1,
+      brief: "Skill « Expert publications »",
+      effet: "lumieres", annonceScene: "Le studio s’allume !",
+      explication: "On définit une fois la mission, le ton et les règles. L’IA les réapplique à chaque nouvelle demande, sans tout réexpliquer."
+    },
+    {
+      theme: "publication", etape: "La cible",
+      question: "« Élodie, 34 ans, fan d’artisanat local » : c’est…",
+      reponses: ["Un persona : ma cliente idéale", "Une influenceuse à payer", "Une IA concurrente", "Ma comptable"],
+      bonne: 1,
+      brief: "Cible : Élodie, 34 ans",
+      effet: "persona", annonceScene: "Élodie rejoint le tableau",
+      explication: "Le persona est le portrait de votre client idéal. Avec lui, l’IA sait à qui elle parle et choisit les bons mots."
+    },
+    {
+      theme: "publication", etape: "L’appel à l’action",
+      question: "Pour finir ma publication, j’ajoute…",
+      reponses: ["Un appel à l’action", "30 hashtags au hasard", "Un faux avis client", "Un prix inventé par l’IA"],
+      bonne: 1,
+      brief: "« Venez la découvrir à l’atelier ! »",
+      effet: "appel", annonceScene: "L’appel à l’action est au tableau",
+      explication: "Dites au lecteur quoi faire ensuite : venir, réserver, appeler… Et jamais de faux avis ni de prix inventé !"
+    },
+    {
+      theme: "image", etape: "Le sujet",
+      question: "Quel sujet principal est le plus précis ?",
+      reponses: ["Une bougie en cire de soja, pot ambré", "Un bel objet", "Un produit artisanal", "Une bougie, un vase et un savon"],
+      bonne: 1,
+      brief: "Bougie en cire de soja, pot ambré",
+      effet: "sujet", annonceScene: "La bougie entre en scène",
+      explication: "Plus le sujet est précis (matière, forme, couleur), plus l’image ressemble à votre produit. Un seul sujet principal à la fois !"
+    },
+    {
+      theme: "image", etape: "Le décor",
+      question: "Quelle phrase décrit le décor ?",
+      reponses: ["Posée sur une table en bois clair", "Lumière naturelle douce", "Gros plan, vue de 3/4", "En cire de soja"],
+      bonne: 1,
+      brief: "posée sur une table en bois clair",
+      effet: "decor", annonceScene: "Le décor est posé",
+      explication: "Le décor, c’est où se trouve le sujet : la surface, l’arrière-plan. « Lumière douce » décrit l’ambiance, « vue de 3/4 » le cadrage."
+    },
+    {
+      theme: "image", etape: "L’ambiance",
+      question: "Pour l’ambiance, j’écris plutôt…",
+      reponses: ["Lumière douce, ambiance cosy", "Fais-la belle", "Très haute qualité svp", "Comme d’habitude"],
+      bonne: 1,
+      brief: "lumière naturelle douce, ambiance cosy",
+      effet: "ambiance", annonceScene: "Flamme allumée, lumière douce",
+      explication: "« Fais-la belle » ne dit rien à l’IA. Décrivez la lumière et l’ambiance voulues : douce, chaleureuse, lumineuse…"
+    },
+    {
+      theme: "image", etape: "Le cadrage",
+      question: "« Gros plan, vue de 3/4 », c’est…",
+      reponses: ["Le cadrage", "Le décor", "L’ambiance", "Le sujet"],
+      bonne: 1,
+      brief: "gros plan, vue de 3/4 avant",
+      effet: "cadrage", annonceScene: "Clic ! La photo est prise",
+      explication: "Le cadrage dit comment l’image est composée : gros plan, vue de dessus, vue de 3/4… Ici, on s’approche du produit."
+    },
+    {
+      theme: "video", etape: "Le mouvement",
+      question: "Pour filmer en tournant autour de la bougie, je demande…",
+      reponses: ["Un plan orbital", "Un zoom arrière", "Une photo floue", "Un fond vert"],
+      bonne: 1,
+      brief: "Vidéo : plan orbital à 360°",
+      effet: "orbite", annonceScene: "Action ! Plan orbital",
+      explication: "Le plan orbital fait le tour du produit pour le montrer sous tous ses angles. On voit la vidéo en détail cet après-midi !"
+    }
+  ],
+
+  /* ---------- 2. LE TEMPS ---------- */
+  tempsReponse: 25,   // secondes pour répondre (0 = pas de limite). À la fin du temps, la réponse sélectionnée est validée.
+  alerteFin: 5,       // dernières secondes : la barre passe en ambre et le chrono fait tic-tac
+
+  /* ---------- 3. LES DURÉES (en secondes) ---------- */
+  durees: {
+    suspense: 0.7,        // après « Valider », avant de révéler la bonne réponse
+    reponse: 1.6,         // affichage « Bien vu ! » ou « Presque ! »
+    explicationMin: 1.2,  // délai avant de pouvoir fermer l’explication
+    construction: 2.6,    // apparition d’un élément dans le studio
+    cadrage: 4.4,         // séquence photo (zoom, viseur, flash)
+    orbite: 6.0,          // séquence vidéo (tour complet de la bougie)
+    fonduFin: 0.8
+  },
+
+  explicationSiBonneReponse: false, // false = on enchaîne directement après une bonne réponse
+  volume: 0.4,
+
+  /* ---------- 4. LES COULEURS DE LA CHARTE ---------- */
+  couleurs: {
+    bleuPastel: "#C4DFFF",
+    creme:      "#FFF3DF",
+    vert:       "#78AF59",
+    sable:      "#C69B70",
+    bleu:       "#2763B6",
+    ambre:      "#F3A33B",
+    menthe:     "#61C8B0",
+    prune:      "#AD5195",
+    encre:      "#202744",
+    rouge:      "#BF3A46",
+    peau:       "#AE7445",
+    cheveux:    "#523721",
+    rocher:     "#777C86",
+    soleil:     "#FFE0AF"
+  },
+
+  /* ---------- 5. LES TEXTES DES ÉCRANS ---------- */
+  textes: {
+    journee: "Journée 2",
+    titreLigne1: "Le Studio",
+    titreLigne2: "de l’IA",
+    accueilAccroche: "8 étapes pour créer la publication, la photo et la vidéo d’une bougie artisanale.",
+    accueilGroupe: "À chaque bonne réponse, le studio se monte sous vos yeux. Le groupe peut aider à voix haute !",
+    boutonJouer: "Jouer",
+    aideChoisir: "choisir une réponse",
+    aideValider: "valider",
+    aideTactileChoisir: "Touchez une réponse",
+    aideTactileValider: "puis « Valider »",
+    etape: "Étape",
+    score: "Score",
+    briefTitre: "Le brief de l’IA",
+    themes: { publication: "La publication", image: "L’image", video: "La vidéo · avant-goût" },
+    boutonValider: "Valider",
+    bravo: ["Bien vu !", "Exact !", "Bravo !", "Parfait !"],
+    bravoSousTitre: "+1 point",
+    rate: ["Presque !", "Pas tout à fait…", "Bien tenté !"],
+    rateSousTitre: "Voici la bonne réponse",
+    tempsEcoule: "Temps écoulé !",
+    etiquetteBonne: "Bonne réponse",
+    etiquetteChoisie: "Votre choix",
+    pasDeReponse: "Pas de réponse",
+    saviezVous: "Le saviez-vous ?",
+    boutonContinuer: "Continuer",
+    finTitre: "C’est dans la boîte !",
+    finTiers: [
+      { min: 0, message: "Bon début ! Avec un brief précis, l’IA fait des merveilles : on s’entraîne cet après-midi." },
+      { min: 4, message: "Beau travail ! Vous savez déjà guider l’IA vers un contenu qui vous ressemble." },
+      { min: 7, message: "Pros du prompt ! Votre studio est prêt pour la vidéo de cet après-midi." }
+    ],
+    finPrompt: "Le prompt de la photo",
+    messageCle: "Objectif clair + prompt précis + votre ton = un contenu qui vous ressemble !",
+    boutonRejouer: "Rejouer",
+    postNom: "Mon atelier",
+    postSousTitre: "Publication · brouillon",
+    postLegende: "Notre bougie en cire de soja, coulée à la main dans son pot ambré. Une lumière douce pour vos soirées cosy. Venez la découvrir à l’atelier !",
+    pause: "Pause",
+    boutonReprendre: "Reprendre"
+  }
+};
+/* ===================== FIN DE LA PARTIE À MODIFIER ===================== */
+</script>
+
+<!-- Polices de la charte (si pas d’internet, des polices arrondies du système prennent le relais) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500..700&family=Nunito:wght@700..900&display=swap" rel="stylesheet">
+
+<!-- Three.js (version fixe), chargé depuis un CDN -->
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+
+<style>
+:root {
+  --bleu-pastel: #C4DFFF; --creme: #FFF3DF; --vert: #78AF59; --sable: #C69B70;
+  --bleu: #2763B6; --ambre: #F3A33B; --menthe: #61C8B0; --prune: #AD5195;
+  --encre: #202744; --rouge: #BF3A46;
+  --titre: "Fredoka", "Arial Rounded MT Bold", "Trebuchet MS", system-ui, sans-serif;
+  --texte: "Nunito", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --ombre: 0 10px 28px rgba(32, 39, 68, .18);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden; background: #3A3F55;
+  font-family: var(--texte); color: var(--encre);
+  -webkit-user-select: none; user-select: none; touch-action: none;
+  -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%;
+}
+#scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+#ui { position: fixed; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; pointer-events: none; }
+#ui button { pointer-events: auto; font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+.cache { display: none !important; }
+.lecteur { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ---------- Pastilles ---------- */
+.pill {
+  display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 24px;
+  border-radius: 999px; background: var(--creme); box-shadow: var(--ombre);
+  font: 900 26px/1 var(--texte); white-space: nowrap;
+}
+#hud { position: absolute; inset: 0; transition: opacity .4s; }
+#hud.masque { opacity: 0; visibility: hidden; }
+#hud-gauche { position: absolute; left: 24px; top: 24px; display: flex; gap: 12px; }
+#coin { position: absolute; right: 24px; top: 24px; display: flex; gap: 12px; }
+.rond { width: 56px; height: 56px; border-radius: 50%; background: var(--creme) !important; box-shadow: var(--ombre); display: grid; place-items: center; }
+.rond svg { width: 28px; height: 28px; }
+.rond:hover { transform: scale(1.06); }
+
+/* ---------- Bandeau question ---------- */
+#bandeau { position: absolute; top: 24px; left: 500px; width: 1150px; display: flex; flex-direction: column; align-items: center; gap: 10px; transition: opacity .35s; }
+#theme { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 20px; border-radius: 999px; color: #fff; font: 700 26px/1 var(--titre); box-shadow: var(--ombre); }
+#theme svg { width: 26px; height: 26px; }
+#theme.publication { background: var(--bleu); }
+#theme.image { background: var(--prune); }
+#theme.video { background: var(--encre); }
+#bandeau-carte {
+  width: 100%; min-height: 96px; padding: 16px 40px; border-radius: 24px;
+  background: rgba(255, 243, 223, .97); box-shadow: var(--ombre);
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font: 700 50px/1.1 var(--titre); letter-spacing: -.01em;
+}
+#progression { width: 100%; height: 12px; border-radius: 6px; background: rgba(32, 39, 68, .18); overflow: hidden; }
+#progression-barre { width: 100%; height: 100%; border-radius: 6px; background: var(--bleu); transform-origin: left center; transition: background-color .3s; }
+#progression.urgent #progression-barre { background: var(--ambre); }
+#progression.sans-limite { visibility: hidden; }
+
+/* ---------- Brief (colonne de gauche) ---------- */
+#brief { position: absolute; left: 24px; top: 104px; width: 450px; padding: 16px 20px 12px; border-radius: 24px; background: rgba(255, 243, 223, .95); box-shadow: var(--ombre); transition: opacity .35s, transform .35s; }
+#brief-titre { font: 700 32px/1 var(--titre); margin-bottom: 6px; }
+.brief-groupe { margin-top: 10px; font: 900 18px/1 var(--texte); text-transform: uppercase; letter-spacing: .06em; opacity: .62; }
+.case { display: flex; align-items: center; gap: 10px; margin-top: 4px; padding: 4px 8px; border-radius: 12px; border: 3px solid transparent; transition: background-color .3s, border-color .3s; }
+.case .num { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: rgba(32, 39, 68, .1); font: 900 18px/1 var(--texte); }
+.case .contenu { min-width: 0; }
+.case .lib { font: 900 19px/1.15 var(--texte); }
+.case .val { font: 800 18px/1.2 var(--texte); color: rgba(32, 39, 68, .45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.case.encours { border-color: var(--bleu); background: rgba(39, 99, 182, .08); }
+.case.ok .num { background: var(--vert); }
+.case.ko .num { background: var(--rouge); color: #fff; }
+.case.remplie .val { color: var(--encre); }
+.case.flash { animation: flash-case .9s ease-out; }
+@keyframes flash-case { 0% { background: rgba(243, 163, 59, .7); } 100% { background: transparent; } }
+#etapes { position: absolute; display: none; gap: 10px; justify-content: center; }
+.etape-point { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 243, 223, .9); box-shadow: var(--ombre); font: 900 24px/1 var(--texte); border: 4px solid transparent; }
+.etape-point.encours { border-color: var(--bleu); }
+.etape-point.ok { background: var(--vert); }
+.etape-point.ko { background: var(--rouge); color: #fff; }
+
+/* ---------- Cartes réponses ---------- */
+#cartes { position: absolute; left: 80px; bottom: 24px; width: 1760px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; transition: opacity .35s, transform .35s; }
+.carte {
+  position: relative; display: block; text-align: center; border-radius: 20px !important;
+  background: var(--creme) !important; box-shadow: var(--ombre);
+  outline: 6px solid transparent; transition: transform .2s, opacity .3s, outline-color .2s;
+}
+.carte-tete { height: 56px; border-radius: 20px 20px 0 0; display: flex; align-items: center; justify-content: center; gap: 14px; font: 700 40px/1 var(--titre); transition: background-color .2s; }
+.carte-corps { min-height: 95px; padding: 12px 16px 14px; display: flex; align-items: center; justify-content: center; font: 900 30px/1.15 var(--texte); }
+.carte .badge {
+  position: absolute; top: -40px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  padding: 5px 14px; border-radius: 999px; background: var(--encre); color: var(--creme);
+  font: 900 20px/1.2 var(--texte); opacity: 0; transition: opacity .2s;
+}
+.carte.actuelle { transform: translateY(-10px); outline-color: var(--c); }
+.carte.actuelle .badge { opacity: 1; }
+.carte.validee { animation: suspense .35s ease-in-out infinite alternate; }
+@keyframes suspense { from { transform: translateY(-10px) scale(1); } to { transform: translateY(-10px) scale(1.03); } }
+.carte.bonne { outline-color: var(--vert); transform: translateY(-10px); animation: none; }
+.carte.bonne .carte-tete { background: var(--vert) !important; color: var(--encre) !important; }
+.carte.bonne .carte-tete svg { fill: var(--encre) !important; }
+.carte.bonne .badge { opacity: 1; background: var(--vert); color: var(--encre); }
+.carte.choisie { outline-color: var(--rouge); animation: none; }
+.carte.choisie .carte-tete { background: var(--rouge) !important; color: #fff !important; }
+.carte.choisie .carte-tete svg { fill: #fff !important; }
+.carte.choisie .badge { opacity: 1; background: var(--rouge); color: #fff; }
+.carte.estompee { opacity: .45; }
+#btn-valider { position: absolute; left: 50%; bottom: 214px; transform: translateX(-50%); min-width: 320px; height: 88px; font-size: 40px !important; transition: transform .15s, opacity .3s; }
+#btn-valider:hover:not(:disabled) { transform: translateX(-50%) scale(1.05); }
+#btn-valider.invisible { opacity: 0; pointer-events: none !important; }
+#hud.cinema #cartes, #hud.cinema #brief, #hud.cinema #bandeau, #hud.cinema #btn-valider, #hud.cinema #etapes { opacity: 0; pointer-events: none; }
+#hud.cinema #cartes { transform: translateY(40px); }
+#hud.cinema #brief { transform: translateX(-40px); }
+
+/* ---------- Retours ---------- */
+#retour { position: absolute; left: 0; right: 0; top: 300px; display: flex; flex-direction: column; align-items: center; gap: 12px; opacity: 0; transition: opacity .25s; pointer-events: none; }
+#retour.visible { opacity: 1; }
+#retour-titre { padding: 10px 36px; border-radius: 24px; background: var(--creme); box-shadow: var(--ombre); font: 700 64px/1.1 var(--titre); text-shadow: 0 4px 0 rgba(243, 163, 59, .55); }
+#retour-sous { padding: 8px 22px; border-radius: 999px; font: 900 30px/1.2 var(--texte); }
+#retour.ok #retour-sous { background: var(--vert); color: var(--encre); }
+#retour.ko #retour-sous { background: var(--creme); color: var(--encre); box-shadow: var(--ombre); }
+#annonce-scene { position: absolute; left: 50%; top: 268px; transform: translate(-50%, -10px); display: inline-flex; align-items: center; gap: 12px; padding: 12px 30px; border-radius: 999px; background: var(--ambre); color: var(--encre); box-shadow: var(--ombre); font: 700 40px/1.1 var(--titre); white-space: nowrap; opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; }
+#annonce-scene.visible { opacity: 1; transform: translate(-50%, 0); }
+#annonce-scene svg { width: 34px; height: 34px; }
+
+/* Viseur photo / vidéo et flash */
+#viseur { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity .3s; }
+#viseur.visible { opacity: 1; }
+#viseur .coin-v { position: absolute; width: 9vmin; height: 9vmin; border: 0 solid rgba(255, 255, 255, .95); filter: drop-shadow(0 0 4px rgba(0, 0, 0, .35)); }
+#viseur .hg { left: 6vmin; top: 6vmin; border-left-width: .9vmin; border-top-width: .9vmin; }
+#viseur .hd { right: 6vmin; top: 6vmin; border-right-width: .9vmin; border-top-width: .9vmin; }
+#viseur .bg { left: 6vmin; bottom: 6vmin; border-left-width: .9vmin; border-bottom-width: .9vmin; }
+#viseur .bd { right: 6vmin; bottom: 6vmin; border-right-width: .9vmin; border-bottom-width: .9vmin; }
+#viseur .mire { position: absolute; left: 50%; top: 50%; width: 7vmin; height: 7vmin; transform: translate(-50%, -50%); border: .45vmin solid rgba(255, 255, 255, .85); border-radius: 50%; }
+#viseur .etiquette-v { position: absolute; left: 9vmin; top: 9vmin; display: flex; align-items: center; gap: 1.4vmin; color: #fff; font: 700 4vmin/1 var(--titre); text-shadow: 0 0 6px rgba(0, 0, 0, .5); }
+#viseur .point-rec { width: 3vmin; height: 3vmin; border-radius: 50%; background: var(--rouge); box-shadow: 0 0 0 .5vmin rgba(255, 255, 255, .8); }
+#viseur.video .point-rec { animation: rec 1s steps(2) infinite; }
+@keyframes rec { 50% { opacity: .15; } }
+#viseur:not(.video) .point-rec { background: #fff; box-shadow: none; }
+#flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+
+/* ---------- Écrans ---------- */
+.ecran { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .4s, visibility .4s; }
+.ecran.visible { opacity: 1; visibility: visible; }
+.panneau-droite { position: absolute; right: 80px; width: 860px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+.carte-creme { background: var(--creme); border-radius: 24px; box-shadow: var(--ombre); padding: 28px 40px; text-align: center; }
+.bouton-principal {
+  display: inline-flex; align-items: center; justify-content: center; gap: 18px;
+  min-width: 340px; height: 100px; padding: 0 48px; border-radius: 50px;
+  background: var(--bleu) !important; color: #fff !important; font: 700 44px/1 var(--titre) !important;
+  box-shadow: 0 7px 0 #1b4a8a, var(--ombre); transition: transform .15s, opacity .3s;
+}
+.bouton-principal:hover:not(:disabled) { transform: scale(1.05); }
+.bouton-principal:disabled { opacity: .4; cursor: default !important; }
+.bouton-principal kbd { font: 900 20px/1 var(--texte); padding: 7px 12px; border-radius: 8px; background: rgba(255, 255, 255, .22); }
+
+/* Accueil */
+#ecran-accueil .panneau-droite { top: 56px; }
+#journee { padding: 8px 24px; border-radius: 999px; background: var(--ambre); font: 700 32px/1 var(--titre); box-shadow: var(--ombre); }
+.logo { font: 700 120px/.98 var(--titre); color: var(--encre); text-align: center; text-shadow: 0 7px 0 var(--ambre); letter-spacing: -.01em; -webkit-text-stroke: 16px var(--creme); paint-order: stroke fill; }
+.logo span { display: block; }
+#accueil-carte { width: 860px; }
+#accueil-accroche { font: 900 34px/1.25 var(--texte); }
+#accueil-groupe { margin-top: 12px; font: 750 28px/1.3 var(--texte); }
+.aide { display: flex; flex-direction: column; gap: 12px; padding: 16px 28px; border-radius: 20px; background: rgba(255, 243, 223, .94); box-shadow: var(--ombre); font: 800 24px/1.2 var(--texte); }
+.aide div { display: flex; align-items: center; gap: 6px; }
+.touche { display: inline-grid; place-items: center; min-width: 44px; height: 42px; padding: 0 10px; border-radius: 10px; background: var(--creme); border: 2px solid var(--encre); box-shadow: 0 3px 0 var(--encre); font: 900 21px/1 var(--texte); }
+#erreurs-config { color: var(--rouge); font: 900 22px/1.3 var(--texte); text-align: left; }
+
+/* Explication */
+#ecran-explication { background: rgba(32, 39, 68, .35); display: flex; align-items: center; justify-content: center; }
+.carte-explication { width: 1200px; margin-top: 120px; padding: 40px 56px 36px; text-align: left; }
+#expl-titre { font: 700 56px/1.1 var(--titre); }
+.ligne-reponse { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 18px; font: 900 34px/1.2 var(--texte); }
+.etiquette { padding: 8px 16px; border-radius: 999px; font: 900 24px/1.2 var(--texte); white-space: nowrap; }
+.etiquette.verte { background: var(--vert); color: var(--encre); }
+.etiquette.rouge { background: var(--rouge); color: #fff; }
+.pastille-couloir { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 14px; border-radius: 12px; font: 700 30px/1 var(--titre); }
+.saviez { display: inline-block; margin-top: 28px; border-bottom: 4px solid var(--ambre); font: 900 26px/1.3 var(--texte); }
+#expl-texte { margin-top: 12px; font: 800 32px/1.35 var(--texte); }
+.actions { display: flex; justify-content: flex-end; margin-top: 28px; }
+#btn-continuer { height: 84px; font-size: 34px !important; }
+
+/* Fin */
+#post { position: absolute; left: 80px; top: 50%; width: 680px; transform: translateY(-50%); border-radius: 26px; background: #fff; box-shadow: 0 18px 44px rgba(32, 39, 68, .3); overflow: hidden; }
+.post-tete { display: flex; align-items: center; gap: 16px; padding: 18px 22px; }
+.post-avatar { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--ambre); font: 700 26px/1 var(--titre); }
+.post-nom { font: 900 26px/1.1 var(--texte); }
+.post-sous { font: 800 19px/1.2 var(--texte); opacity: .55; }
+#post-photo { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--sable); }
+.post-actions { display: flex; gap: 22px; padding: 16px 22px 4px; }
+.post-actions svg { width: 36px; height: 36px; }
+#post-legende { padding: 6px 22px 24px; font: 800 24px/1.35 var(--texte); }
+#post-legende b { font-weight: 900; }
+#ecran-fin .panneau-droite { top: 50%; transform: translateY(-50%); }
+#fin-carte { width: 860px; padding: 30px 44px 34px; }
+#fin-titre { font: 700 60px/1.1 var(--titre); }
+#fin-score { margin: 2px 0 6px; font: 700 130px/1 var(--titre); color: var(--bleu); }
+#fin-points { display: flex; justify-content: center; gap: 8px; }
+.point { min-width: 64px; padding: 6px 10px; border-radius: 999px; font: 900 22px/1.2 var(--texte); }
+.point.ok { background: var(--vert); color: var(--encre); }
+.point.ko { background: var(--rouge); color: #fff; }
+#fin-message { margin-top: 18px; font: 800 30px/1.3 var(--texte); }
+#fin-prompt { margin-top: 18px; padding: 14px 20px; border-radius: 18px; background: rgba(173, 81, 149, .1); text-align: left; font: 800 23px/1.35 var(--texte); }
+#fin-prompt b { display: block; margin-bottom: 4px; font: 900 18px/1 var(--texte); text-transform: uppercase; letter-spacing: .06em; color: var(--prune); }
+#fin-cle { margin: 20px 0 24px; padding: 16px 24px; border: 6px solid var(--ambre); border-radius: 24px; background: var(--creme); font: 700 40px/1.15 var(--titre); }
+
+/* Pause */
+#ecran-pause { background: rgba(32, 39, 68, .6); display: flex; align-items: center; justify-content: center; }
+#ecran-pause .carte-creme { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 44px 70px; }
+#pause-titre { font: 700 72px/1 var(--titre); }
+
+.message-plein { position: fixed; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; background: var(--creme); font: 800 22px/1.4 var(--texte); }
+.message-plein strong { display: block; margin-bottom: 8px; font: 700 34px/1.2 var(--titre); }
+.aide-tactile { display: none !important; }
+body.tactile .aide-clavier { display: none !important; }
+body.tactile .aide-tactile { display: flex !important; }
+body.tactile .bouton-principal kbd { display: none; }
+* { touch-action: manipulation; }
+#scene, #ui, .carte { touch-action: none; }
+
+/* ---------- Téléphone ou écran en vertical : interface dessinée pour 1080 × 1920 ---------- */
+body.portrait .pill { height: 60px; font-size: 30px; }
+body.portrait #bandeau { top: 104px; left: 24px; width: 1032px; }
+body.portrait #theme { height: 52px; font-size: 30px; }
+body.portrait #bandeau-carte { font-size: 56px; padding: 18px 32px; }
+body.portrait #brief { display: none; }
+body.portrait #etapes { display: flex; left: 24px; right: 24px; top: 420px; }
+body.portrait #cartes { left: 24px; width: 1032px; grid-template-columns: repeat(2, 1fr); gap: 56px 20px; }
+body.portrait .carte-tete { height: 64px; font-size: 46px; }
+body.portrait .carte-corps { min-height: 120px; font-size: 38px; }
+body.portrait .carte .badge { font-size: 26px; top: -46px; }
+body.portrait #btn-valider { bottom: 520px; height: 104px; min-width: 420px; font-size: 48px !important; }
+body.portrait #retour { top: 560px; }
+body.portrait #annonce-scene { top: 520px; font-size: 44px; }
+body.portrait .panneau-droite { left: 24px; right: 24px; width: auto; }
+body.portrait #ecran-accueil .panneau-droite { top: 120px; }
+body.portrait #accueil-carte, body.portrait #fin-carte { width: 100%; }
+body.portrait #accueil-accroche { font-size: 42px; }
+body.portrait #accueil-groupe { font-size: 36px; }
+body.portrait .aide { font-size: 32px; }
+body.portrait #ecran-fin .panneau-droite { top: 40px; transform: none; }
+body.portrait #fin-carte { padding: 26px 34px 30px; }
+body.portrait #fin-score { font-size: 110px; }
+body.portrait #fin-message { font-size: 34px; }
+body.portrait #fin-prompt { font-size: 28px; }
+body.portrait #fin-cle { font-size: 44px; margin: 18px 0 22px; }
+body.portrait #post { left: 50%; top: auto; bottom: 40px; width: 760px; transform: translateX(-50%); }
+body.portrait #post-photo { aspect-ratio: 16 / 9; }
+body.portrait #post-legende { font-size: 28px; }
+body.portrait .carte-explication { width: 1032px; margin-top: 200px; padding: 40px 44px; }
+body.portrait #expl-titre { font-size: 64px; }
+body.portrait .ligne-reponse { font-size: 40px; }
+body.portrait .etiquette { font-size: 30px; }
+body.portrait .saviez { font-size: 32px; }
+body.portrait #expl-texte { font-size: 42px; }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="viseur"><span class="coin-v hg"></span><span class="coin-v hd"></span><span class="coin-v bg"></span><span class="coin-v bd"></span><span class="mire"></span><div class="etiquette-v"><span class="point-rec"></span><span id="viseur-texte">PHOTO</span></div></div>
+<div id="flash"></div>
+
+<div id="ui">
+  <!-- HUD pendant le jeu -->
+  <div id="hud" class="masque">
+    <div id="hud-gauche">
+      <div class="pill" id="pill-etape"></div>
+      <div class="pill" id="pill-score"></div>
+    </div>
+    <div id="bandeau">
+      <div id="theme"></div>
+      <div id="bandeau-carte"><span id="texte-question"></span></div>
+      <div id="progression"><div id="progression-barre"></div></div>
+    </div>
+    <div id="brief"><div id="brief-titre"></div><div id="brief-liste"></div></div>
+    <div id="etapes"></div>
+    <button id="btn-valider" class="bouton-principal invisible" disabled></button>
+    <div id="cartes">
+      <button class="carte" data-c="0"><span class="badge"></span><div class="carte-tete"></div><div class="carte-corps"></div></button>
+      <button class="carte" data-c="1"><span class="badge"></span><div class="carte-tete"></div><div class="carte-corps"></div></button>
+      <button class="carte" data-c="2"><span class="badge"></span><div class="carte-tete"></div><div class="carte-corps"></div></button>
+      <button class="carte" data-c="3"><span class="badge"></span><div class="carte-tete"></div><div class="carte-corps"></div></button>
+    </div>
+  </div>
+
+  <div id="retour"><div id="retour-titre"></div><div id="retour-sous"></div></div>
+  <div id="annonce-scene"></div>
+
+  <!-- Accueil -->
+  <section id="ecran-accueil" class="ecran visible">
+    <div class="panneau-droite">
+      <div id="journee"></div>
+      <h1 class="logo"><span id="logo-l1"></span><span id="logo-l2"></span></h1>
+      <div class="carte-creme" id="accueil-carte">
+        <p id="accueil-accroche"></p>
+        <p id="accueil-groupe"></p>
+        <div id="erreurs-config" class="cache"></div>
+      </div>
+      <button id="btn-jouer" class="bouton-principal"></button>
+      <div class="aide aide-clavier">
+        <div><span class="touche">←</span><span class="touche">→</span>&nbsp;ou&nbsp;<span class="touche">1</span>…<span class="touche">4</span>&nbsp;: <span id="aide-choisir"></span></div>
+        <div><span class="touche">Espace</span>&nbsp;ou&nbsp;<span class="touche">Entrée</span>&nbsp;: <span id="aide-valider"></span></div>
+      </div>
+      <div class="aide aide-tactile">
+        <div><span id="aide-tactile-choisir"></span>&nbsp;<span id="aide-tactile-valider"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Explication (seulement après une erreur) -->
+  <section id="ecran-explication" class="ecran">
+    <div class="carte-creme carte-explication">
+      <h2 id="expl-titre"></h2>
+      <div class="ligne-reponse"><span class="etiquette verte" id="expl-etiquette-bonne"></span><span id="expl-pastille-bonne"></span><span id="expl-bonne"></span></div>
+      <div class="ligne-reponse"><span class="etiquette rouge" id="expl-etiquette-choisie"></span><span id="expl-pastille-choisie"></span><span id="expl-choisie"></span></div>
+      <div class="saviez" id="expl-saviez"></div>
+      <p id="expl-texte"></p>
+      <div class="actions"><button id="btn-continuer" class="bouton-principal" disabled></button></div>
+    </div>
+  </section>
+
+  <!-- Fin -->
+  <section id="ecran-fin" class="ecran">
+    <div id="post">
+      <div class="post-tete"><div class="post-avatar" id="post-avatar"></div><div><div class="post-nom" id="post-nom"></div><div class="post-sous" id="post-sous"></div></div></div>
+      <img id="post-photo" alt="Photo de la bougie prise dans le studio">
+      <div class="post-actions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#BF3A46" stroke-width="2.2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="#BF3A46"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#202744" stroke-width="2.2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#202744" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"><path d="M4 12l16-8-6 16-3-6z"/></svg>
+      </div>
+      <p id="post-legende"></p>
+    </div>
+    <div class="panneau-droite">
+      <div class="carte-creme" id="fin-carte">
+        <h2 id="fin-titre"></h2>
+        <div id="fin-score"></div>
+        <div id="fin-points"></div>
+        <p id="fin-message"></p>
+        <div id="fin-prompt"></div>
+        <div id="fin-cle"></div>
+        <button id="btn-rejouer" class="bouton-principal"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pause -->
+  <section id="ecran-pause" class="ecran">
+    <div class="carte-creme"><div id="pause-titre"></div><button id="btn-reprendre" class="bouton-principal"></button></div>
+  </section>
+
+  <div id="coin">
+    <button class="rond" id="btn-plein-ecran" title="Plein écran" aria-label="Plein écran"></button>
+    <button class="rond" id="btn-son" title="Couper le son" aria-label="Couper le son"></button>
+  </div>
+  <div id="annonce" class="lecteur" aria-live="polite"></div>
+</div>
+
+<div class="message-plein" id="erreur"><div><strong>Le jeu n’a pas pu démarrer</strong><span id="erreur-texte">Vérifiez la connexion internet (nécessaire pour charger la 3D), puis rechargez la page. Utilisez Chrome ou Edge.</span></div></div>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* =====================================================================
+   1. OUTILS ET RÉGLAGES FIXES
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const doux = (t) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const rebond = (t) => { const c = 1.70158, c3 = c + 1; return 1 + c3 * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }; // dépasse un peu puis revient
+const hasard = (a, b) => a + Math.random() * (b - a);
+const choisir = (liste) => liste[Math.floor(Math.random() * liste.length)];
+function melanger(liste) {
+  const l = liste.slice();
+  for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; }
+  return l;
+}
+const typo = (s) => String(s).replace(/ ([?!:;»])/g, ' $1').replace(/« /g, '« ');
+
+const C = CONFIG.couleurs, D = CONFIG.durees, T = CONFIG.textes;
+const NB = CONFIG.questions.length;
+const POLICE_TITRE = '"Fredoka", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif';
+const POLICE_TEXTE = '"Nunito", "Segoe UI", Arial, sans-serif';
+const ECHELLE_PERSO = 0.88;
+
+const REPONSES = [
+  { lettre: 'A', couleur: C.bleu,   texte: '#FFFFFF', forme: 'cercle' },
+  { lettre: 'B', couleur: C.ambre,  texte: C.encre,   forme: 'carre' },
+  { lettre: 'C', couleur: C.menthe, texte: C.encre,   forme: 'triangle' },
+  { lettre: 'D', couleur: C.prune,  texte: '#FFFFFF', forme: 'losange' }
+];
+const varsCss = { '--bleu-pastel': C.bleuPastel, '--creme': C.creme, '--vert': C.vert, '--sable': C.sable, '--bleu': C.bleu,
+  '--ambre': C.ambre, '--menthe': C.menthe, '--prune': C.prune, '--encre': C.encre, '--rouge': C.rouge };
+for (const [k, v] of Object.entries(varsCss)) document.documentElement.style.setProperty(k, v);
+
+function svgForme(forme, couleur, taille) {
+  const formes = {
+    cercle: '<circle cx="12" cy="12" r="9.5"/>',
+    carre: '<rect x="3" y="3" width="18" height="18" rx="1.5"/>',
+    triangle: '<polygon points="12,2.5 22.5,21 1.5,21"/>',
+    losange: '<polygon points="12,1 23,12 12,23 1,12"/>'
+  };
+  return `<svg viewBox="0 0 24 24" width="${taille}" height="${taille}" fill="${couleur}" aria-hidden="true">${formes[forme]}</svg>`;
+}
+function pastilleReponse(c) {
+  const l = REPONSES[c];
+  return `<span class="pastille-couloir" style="background:${l.couleur};color:${l.texte}">${l.lettre}${svgForme(l.forme, l.texte, 26)}</span>`;
+}
+const ICONES = {
+  pleinEcran: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  quitterPleinEcran: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
+  son: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+  muet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
+  publication: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h3l7 4V6L6 10H3zm13-1.5v7a4 4 0 0 0 0-7zM16 4v2.1a7 7 0 0 1 0 11.8V20a9 9 0 0 0 0-16z"/></svg>',
+  image: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l1.5-2h5L16 5h4a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4zm4 3.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>',
+  video: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9zm-.4-2.2L19.8 2.5l.6 2.3L3.2 9.1zM6.5 5.9l2.6 2.3 1.9-.5-2.6-2.3zm5.3-1.3 2.6 2.3 1.9-.5-2.6-2.3z"/></svg>',
+  etincelle: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z"/></svg>'
+};
+
+function verifierConfig() {
+  const erreurs = [];
+  const effets = ['lumieres', 'persona', 'appel', 'sujet', 'decor', 'ambiance', 'cadrage', 'orbite'];
+  if (!Array.isArray(CONFIG.questions) || NB === 0) erreurs.push('Aucune question dans CONFIG.');
+  CONFIG.questions.forEach((q, i) => {
+    if (!q.question) erreurs.push(`Étape ${i + 1} : le texte de la question est vide.`);
+    if (!Array.isArray(q.reponses) || q.reponses.length !== 4) erreurs.push(`Étape ${i + 1} : il faut exactement 4 réponses.`);
+    if (![1, 2, 3, 4].includes(q.bonne)) erreurs.push(`Étape ${i + 1} : « bonne » doit valoir 1, 2, 3 ou 4.`);
+    if (q.effet && !effets.includes(q.effet)) erreurs.push(`Étape ${i + 1} : effet « ${q.effet} » inconnu.`);
+  });
+  return erreurs;
+}
+
+/* =====================================================================
+   2. SONS (générés par le code, sans fichier audio)
+   ===================================================================== */
+function lireMuet() { try { return localStorage.getItem('studioIA.muet') === '1'; } catch (e) { return false; } }
+function ecrireMuet(v) { try { localStorage.setItem('studioIA.muet', v ? '1' : '0'); } catch (e) { /* stockage indisponible */ } }
+
+const Son = {
+  ctx: null, maitre: null, bruitBuffer: null, muet: lireMuet(),
+  init() {
+    try {
+      if (!this.ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        this.ctx = new AC();
+        this.maitre = this.ctx.createGain();
+        this.maitre.gain.value = this.muet ? 0 : CONFIG.volume;
+        this.maitre.connect(this.ctx.destination);
+      }
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+    } catch (e) { /* pas de son, le jeu continue */ }
+  },
+  note(freq, debut, duree, type = 'sine', vol = 0.4, freqFin = null) {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime + debut;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    if (freqFin) o.frequency.exponentialRampToValueAtTime(freqFin, t0 + duree);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + duree);
+    o.connect(g).connect(this.maitre);
+    o.start(t0); o.stop(t0 + duree + 0.05);
+  },
+  souffle(duree, f0, f1, vol, debut = 0, type = 'bandpass') {
+    if (!this.ctx) return;
+    if (!this.bruitBuffer) {
+      const n = this.ctx.sampleRate * 0.5;
+      this.bruitBuffer = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
+      const d = this.bruitBuffer.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const t0 = this.ctx.currentTime + debut;
+    const src = this.ctx.createBufferSource(), f = this.ctx.createBiquadFilter(), g = this.ctx.createGain();
+    src.buffer = this.bruitBuffer; src.loop = true;
+    f.type = type; f.Q.value = 1.4;
+    f.frequency.setValueAtTime(f0, t0); f.frequency.exponentialRampToValueAtTime(f1, t0 + duree);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + duree);
+    src.connect(f).connect(g).connect(this.maitre);
+    src.start(t0); src.stop(t0 + duree + 0.05);
+  },
+  clic()      { this.note(600, 0, 0.03, 'sine', 0.25); },
+  selection() { this.note(520, 0, 0.06, 'triangle', 0.3, 700); },
+  bord()      { this.note(220, 0, 0.05, 'sine', 0.35); },
+  valider()   { this.note(392, 0, 0.1, 'triangle', 0.35); this.note(523.25, 0.09, 0.14, 'triangle', 0.35); },
+  demarrage() { [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.note(f, i * 0.08, 0.16, 'triangle', 0.35)); },
+  tic()       { this.note(1000, 0, 0.04, 'square', 0.1); },
+  bonne() {
+    [783.99, 987.77, 1174.66].forEach((f, i) => this.note(f, i * 0.08, 0.2, 'square', 0.1));
+    [1568, 2093, 2637].forEach((f, i) => this.note(f, 0.26 + i * 0.05, 0.12, 'sine', 0.16));
+  },
+  mauvaise() {
+    this.note(329.63, 0, 0.18, 'triangle', 0.35);
+    this.note(261.63, 0.17, 0.23, 'triangle', 0.35);
+  },
+  pop()       { this.note(380, 0, 0.14, 'sine', 0.4, 980); },
+  lumiere()   { this.souffle(0.06, 900, 600, 0.5, 0, 'lowpass'); this.note(110, 0.04, 0.9, 'sawtooth', 0.04, 120); this.note(660, 0.08, 0.5, 'sine', 0.12); },
+  craie()     { for (let i = 0; i < 9; i++) this.souffle(0.07, 2600, 3400, 0.18, i * 0.13); },
+  allumette() { this.souffle(0.35, 3000, 700, 0.35); this.note(260, 0.25, 0.6, 'sine', 0.08, 300); },
+  declencheur() { this.souffle(0.03, 2500, 1800, 0.6); this.souffle(0.05, 1800, 1200, 0.5, 0.08); },
+  moteur()    { this.souffle(1.4, 400, 1200, 0.18); this.note(880, 0, 0.12, 'sine', 0.2); },
+  fin() {
+    [523.25, 659.25, 783.99, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const d = i === 5 ? 0.7 : 0.14;
+      this.note(f, i * 0.15, d, 'triangle', 0.32);
+      this.note(f * 2, i * 0.15, d, 'square', 0.04);
+    });
+  },
+  basculer() {
+    this.muet = !this.muet;
+    if (this.maitre) this.maitre.gain.setTargetAtTime(this.muet ? 0 : CONFIG.volume, this.ctx.currentTime, 0.01);
+    ecrireMuet(this.muet);
+  }
+};
+
+/* =====================================================================
+   3. SCÈNE 3D : moteur, caméra, lumières
+   ===================================================================== */
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: $('scene'), antialias: true });
+} catch (e) {
+  $('erreur-texte').textContent = 'La 3D (WebGL) n’est pas disponible sur cet ordinateur. Essayez avec Chrome ou Edge à jour.';
+  $('erreur').style.display = 'flex';
+  throw e;
+}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor('#3A3F55');
+const ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.05, 80);
+
+// Lumières : niveau 0 = studio éteint, 1 = projecteurs allumés ; « chaud » = ambiance bougie
+const hemi = new THREE.HemisphereLight(C.bleuPastel, C.sable, 0.4);
+const lampe = new THREE.DirectionalLight(C.soleil, 0.3);
+lampe.position.set(-4, 7.5, 6);
+lampe.target.position.set(0, 0.8, -0.5);
+lampe.castShadow = true;
+lampe.shadow.mapSize.set(2048, 2048);
+Object.assign(lampe.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 25 });
+lampe.shadow.bias = -0.0006; lampe.shadow.normalBias = 0.02;
+scene.add(hemi, lampe, lampe.target);
+const flammeLumiere = new THREE.PointLight('#FFB25E', 0, 4, 2);
+scene.add(flammeLumiere);
+const COULEUR_FROIDE = new THREE.Color(C.bleuPastel), COULEUR_CHAUDE = new THREE.Color('#FFE2B8');
+const lum = { niveau: 0.75, cible: 0.75, chaud: 0, chaudCible: 0 };
+
+/* ---------- Fabriques de matériaux et de formes ---------- */
+const cacheMateriaux = new Map();
+function mat(couleur) {
+  if (!cacheMateriaux.has(couleur)) cacheMateriaux.set(couleur, new THREE.MeshLambertMaterial({ color: couleur, flatShading: true }));
+  return cacheMateriaux.get(couleur);
+}
+function maille(geo, couleur, x = 0, y = 0, z = 0, ombre = true) {
+  const m = new THREE.Mesh(geo, typeof couleur === 'string' ? mat(couleur) : couleur);
+  m.position.set(x, y, z);
+  m.castShadow = ombre; m.receiveShadow = true;
+  return m;
+}
+function textureCanvas(l, h, dessiner) {
+  const c = document.createElement('canvas'); c.width = l; c.height = h;
+  dessiner(c.getContext('2d'), l, h);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO;
+  t.userData.canvas = c; t.userData.dessin = dessiner;
+  return t;
+}
+function redessiner(t, dessiner) { const c = t.userData.canvas; const ctx = c.getContext('2d'); ctx.clearRect(0, 0, c.width, c.height); dessiner(ctx, c.width, c.height); t.needsUpdate = true; }
+function rectangleArrondi(ctx, x, y, l, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + l - r, y); ctx.quadraticCurveTo(x + l, y, x + l, y + r);
+  ctx.lineTo(x + l, y + h - r); ctx.quadraticCurveTo(x + l, y + h, x + l - r, y + h);
+  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+}
+function lignesTexte(ctx, texte, largeurMax) {
+  const mots = String(texte).split(/ +/), lignes = []; let ligne = '';
+  for (const mot of mots) {
+    const essai = ligne ? ligne + ' ' + mot : mot;
+    if (ctx.measureText(essai).width <= largeurMax) ligne = essai; else { if (ligne) lignes.push(ligne); ligne = mot; }
+  }
+  if (ligne) lignes.push(ligne);
+  return lignes;
+}
+// Fait apparaître un objet avec un petit rebond (après un délai éventuel)
+const anims = [];
+function apparaitre(obj, delai = 0, duree = 0.55) {
+  const e = obj.userData.echelle || 1;
+  obj.visible = true; obj.scale.setScalar(0.0001);
+  anims.push({ t: -delai, duree, maj: (k) => obj.scale.setScalar(Math.max(0.0001, e * rebond(k))) });
+}
+function animer(duree, maj, delai = 0) { anims.push({ t: -delai, duree, maj }); }
+function plusTard(delai, action) { let fait = false; anims.push({ t: -delai, duree: 0.001, maj: () => { if (!fait) { fait = true; action(); } } }); } // délai en temps de jeu (respecte la pause)
+function mettreAJourAnims(dt) {
+  for (let i = anims.length - 1; i >= 0; i--) {
+    const a = anims[i]; a.t += dt;
+    if (a.t < 0) continue;
+    const k = clamp(a.t / a.duree, 0, 1);
+    a.maj(k);
+    if (k >= 1) anims.splice(i, 1);
+  }
+}
+
+/* =====================================================================
+   4. LE STUDIO : murs, sol, fond photo, projecteurs, mobilier
+   ===================================================================== */
+const BOIS = '#9A7550', BOIS_CLAIR = '#E2BF8F', GRIS = '#4A5068';
+// Sol en lattes de bois
+const texSol = textureCanvas(512, 512, (ctx, l, h) => {
+  ctx.fillStyle = C.sable; ctx.fillRect(0, 0, l, h);
+  for (let i = 0; i < 8; i++) {
+    ctx.fillStyle = i % 2 ? '#BE936A' : '#CCA27A'; ctx.fillRect(0, i * 64, l, 62);
+    ctx.fillStyle = 'rgba(32,39,68,.18)'; ctx.fillRect(0, i * 64 + 62, l, 2);
+    ctx.fillRect(((i * 197) % 400) + 40, i * 64, 2, 62);
+  }
+});
+texSol.wrapS = texSol.wrapT = THREE.RepeatWrapping; texSol.repeat.set(5, 5);
+const sol = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), new THREE.MeshLambertMaterial({ map: texSol }));
+sol.rotation.x = -Math.PI / 2; sol.receiveShadow = true; scene.add(sol);
+// Murs
+const murFond = maille(new THREE.PlaneGeometry(24, 9), '#F4E4CB', 0, 4.5, -3.4, false); scene.add(murFond);
+const murG = maille(new THREE.PlaneGeometry(14, 9), '#EAD5B8', -7, 4.5, 3.6, false); murG.rotation.y = Math.PI / 2; scene.add(murG);
+const murD = maille(new THREE.PlaneGeometry(14, 9), '#EAD5B8', 7, 4.5, 3.6, false); murD.rotation.y = -Math.PI / 2; scene.add(murD);
+scene.add(maille(new THREE.BoxGeometry(24, 0.18, 0.06), BOIS, 0, 0.09, -3.37, false)); // plinthe
+const murAvant = maille(new THREE.PlaneGeometry(24, 9), new THREE.MeshBasicMaterial({ color: '#E9D3B2' }), 0, 4.5, 10.5, false); murAvant.rotation.y = Math.PI; scene.add(murAvant);
+// Fenêtre et étagère sur le mur d’en face (visibles pendant le plan orbital)
+{
+  const f = new THREE.Group(); f.position.set(-1.2, 2.3, 10.45); f.rotation.y = Math.PI; scene.add(f);
+  f.add(maille(new THREE.BoxGeometry(2.2, 1.6, 0.06), '#FFFFFF', 0, 0, 0, false));
+  f.add(maille(new THREE.PlaneGeometry(2.0, 1.4), C.bleuPastel, 0, 0, 0.04, false));
+  f.add(maille(new THREE.BoxGeometry(0.06, 1.4, 0.05), '#FFFFFF', 0, 0, 0.06, false), maille(new THREE.BoxGeometry(2.0, 0.06, 0.05), '#FFFFFF', 0, 0, 0.06, false));
+  const e = new THREE.Group(); e.position.set(2.2, 1.6, 10.3); e.rotation.y = Math.PI; scene.add(e);
+  e.add(maille(new THREE.BoxGeometry(1.6, 0.06, 0.35), BOIS, 0, 0, 0));
+  [[-0.5, C.menthe], [-0.15, C.ambre], [0.25, C.prune], [0.55, C.bleu]].forEach(([x, c]) => e.add(maille(new THREE.CylinderGeometry(0.09, 0.08, 0.22, 7), c, x, 0.14, 0)));
+}
+
+// Fond photo (rouleau de papier sur deux pieds) derrière la table
+{
+  const g = new THREE.Group(); g.position.set(0, 0, -1.55);
+  const papier = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 2.7, 1, 6), mat('#FCEBD3'));
+  // le bas du papier s’arrondit vers le sol
+  const p = papier.geometry.attributes.position;
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i) + 1.35; p.setY(i, y); if (y < 0.5) { const a = (0.5 - y) / 0.5; p.setZ(i, a * a * 0.5); p.setY(i, Math.max(0.005, y)); } }
+  papier.geometry.computeVertexNormals(); papier.receiveShadow = true; g.add(papier);
+  g.add(maille(new THREE.CylinderGeometry(0.09, 0.09, 3.4, 8), '#E9D6B9', 0, 2.75, 0.02).rotateZ(Math.PI / 2));
+  [-1.75, 1.75].forEach((x) => {
+    g.add(maille(new THREE.CylinderGeometry(0.03, 0.03, 2.9, 6), C.encre, x, 1.45, 0.05));
+    [-0.6, 0.6].forEach((dz) => { const pied = maille(new THREE.BoxGeometry(0.05, 0.04, 0.7), C.encre, x, 0.02, 0.05); pied.rotation.y = dz; g.add(pied); });
+  });
+  scene.add(g);
+}
+
+// Projecteurs (boîtes à lumière sur pied) : leur face s’éclaire quand le studio s’allume
+const panneauxLumiere = [];
+function creerProjecteur(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  g.add(maille(new THREE.CylinderGeometry(0.035, 0.035, 2.1, 6), C.encre, 0, 1.05, 0));
+  for (let i = 0; i < 3; i++) { const p = maille(new THREE.BoxGeometry(0.05, 0.04, 0.8), C.encre, 0, 0.03, 0); p.rotation.y = i * Math.PI * 2 / 3; g.add(p); }
+  const tete = new THREE.Group(); tete.position.y = 2.15; g.add(tete);
+  const boite = maille(new THREE.CylinderGeometry(0.62, 0.22, 0.55, 4, 1, true), new THREE.MeshLambertMaterial({ color: '#2F3550', flatShading: true, side: THREE.DoubleSide }));
+  boite.rotation.x = Math.PI / 2; boite.rotation.y = Math.PI / 4; tete.add(boite);
+  const panneau = new THREE.Mesh(new THREE.PlaneGeometry(0.86, 0.86), new THREE.MeshBasicMaterial({ color: '#555B74' }));
+  panneau.position.z = 0.28; tete.add(panneau);
+  panneauxLumiere.push(panneau.material);
+  tete.lookAt(0, 1.1, 0);
+  scene.add(g);
+  return g;
+}
+creerProjecteur(-3.5, 1.1); creerProjecteur(3.4, 1.2);
+
+// Bureau avec ordinateur portable (l’écran affiche le Skill)
+const texEcran = textureCanvas(512, 320, () => {});
+function dessinerEcran(allume) {
+  redessiner(texEcran, (ctx, l, h) => {
+    ctx.fillStyle = allume ? C.creme : '#1A1E30'; ctx.fillRect(0, 0, l, h);
+    if (!allume) return;
+    ctx.fillStyle = C.bleu; ctx.fillRect(0, 0, l, 64);
+    ctx.fillStyle = '#fff'; ctx.font = `700 38px ${POLICE_TITRE}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('Mon assistant IA', 24, 34);
+    ctx.fillStyle = C.vert; rectangleArrondi(ctx, 24, 92, l - 48, 92, 18); ctx.fill();
+    ctx.fillStyle = C.encre; ctx.font = `900 34px ${POLICE_TEXTE}`; ctx.fillText('✓ Skill activé', 46, 124);
+    ctx.font = `800 28px ${POLICE_TEXTE}`; ctx.fillText('Expert publications', 46, 162);
+    ctx.fillStyle = 'rgba(32,39,68,.25)';
+    [214, 246, 278].forEach((y, i) => { rectangleArrondi(ctx, 24, y, l - 48 - i * 90, 16, 8); ctx.fill(); });
+  });
+}
+{
+  const g = new THREE.Group(); g.position.set(3.0, 0, -1.6); g.rotation.y = -0.5;
+  g.add(maille(new THREE.BoxGeometry(1.3, 0.06, 0.7), BOIS, 0, 0.78, 0));
+  [[-0.58, -0.28], [0.58, -0.28], [-0.58, 0.28], [0.58, 0.28]].forEach(([x, z]) => g.add(maille(new THREE.BoxGeometry(0.06, 0.78, 0.06), BOIS, x, 0.39, z)));
+  g.add(maille(new THREE.BoxGeometry(0.62, 0.03, 0.42), GRIS, 0, 0.825, 0.05));
+  const ecran = new THREE.Group(); ecran.position.set(0, 0.84, -0.16); ecran.rotation.x = -0.25; g.add(ecran);
+  ecran.add(maille(new THREE.BoxGeometry(0.62, 0.4, 0.025), GRIS, 0, 0.2, 0));
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(0.57, 0.355), new THREE.MeshBasicMaterial({ map: texEcran }));
+  face.position.set(0, 0.2, 0.014); ecran.add(face);
+  scene.add(g);
+}
+
+// Tableau en liège (persona) et tableau noir (appel à l’action) sur le mur du fond
+const liege = new THREE.Group(); liege.position.set(-2.55, 2.3, -3.36); scene.add(liege);
+liege.add(maille(new THREE.BoxGeometry(1.7, 1.15, 0.05), BOIS, 0, 0, 0, false));
+liege.add(maille(new THREE.BoxGeometry(1.56, 1.01, 0.03), '#C9965F', 0, 0, 0.03, false));
+const texPersona = textureCanvas(512, 384, (ctx, l, h) => {
+  ctx.fillStyle = '#FFFDF7'; ctx.fillRect(0, 0, l, h);
+  ctx.fillStyle = C.prune; ctx.fillRect(0, 0, l, 18);
+  // portrait simple
+  ctx.fillStyle = C.bleuPastel; ctx.beginPath(); ctx.arc(96, 124, 66, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#6B4128'; ctx.beginPath(); ctx.arc(96, 112, 46, Math.PI, 0); ctx.fill(); ctx.fillRect(50, 112, 18, 56); ctx.fillRect(124, 112, 18, 56);
+  ctx.fillStyle = '#C98B5E'; ctx.beginPath(); ctx.arc(96, 124, 34, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = C.encre; ctx.beginPath(); ctx.arc(84, 120, 4, 0, 7); ctx.arc(108, 120, 4, 0, 7); ctx.fill();
+  ctx.strokeStyle = C.encre; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(96, 130, 12, 0.2, Math.PI - 0.2); ctx.stroke();
+  ctx.fillStyle = C.encre; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.font = `700 54px ${POLICE_TITRE}`; ctx.fillText('Élodie', 190, 104);
+  ctx.font = `900 34px ${POLICE_TEXTE}`; ctx.fillText('34 ans · Lille', 190, 150);
+  ctx.font = `800 30px ${POLICE_TEXTE}`;
+  ['♥ Artisanat local', '♥ Authentique, responsable', '✗ Peu de temps'].forEach((t, i) => ctx.fillText(t, 36, 250 + i * 44));
+});
+const carteP = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.69), new THREE.MeshLambertMaterial({ map: texPersona }));
+carteP.position.set(0.05, -0.02, 0.055); carteP.rotation.z = -0.04; carteP.castShadow = true;
+const punaise = maille(new THREE.SphereGeometry(0.04, 6, 4), C.rouge, 0, 0.32, 0.03);
+const persona = new THREE.Group(); persona.add(carteP); carteP.add(punaise); persona.position.z = 0; liege.add(persona);
+// petites notes déjà épinglées pour habiller le tableau
+[[-0.58, 0.3, C.menthe], [0.6, -0.33, C.ambre], [-0.6, -0.3, C.bleuPastel]].forEach(([x, y, c]) => {
+  const n = maille(new THREE.PlaneGeometry(0.24, 0.2), c, x, y, 0.05, false); n.rotation.z = hasard(-0.15, 0.15); liege.add(n);
+});
+
+const tableauNoir = new THREE.Group(); tableauNoir.position.set(2.45, 2.3, -3.36); scene.add(tableauNoir);
+tableauNoir.add(maille(new THREE.BoxGeometry(1.8, 1.2, 0.05), BOIS, 0, 0, 0, false));
+const texCraie = textureCanvas(640, 400, () => {});
+const PHRASE_CRAIE = 'Venez la découvrir à l’atelier !';
+function dessinerCraie(progression) {
+  redessiner(texCraie, (ctx, l, h) => {
+    ctx.fillStyle = '#2B3A3A'; ctx.fillRect(0, 0, l, h);
+    ctx.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 0; i < 40; i++) ctx.fillRect((i * 97) % l, (i * 53) % h, 60, 4);
+    ctx.fillStyle = 'rgba(255,243,223,.55)'; ctx.font = `800 30px ${POLICE_TEXTE}`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText('Ma publication :', 34, 28);
+    const n = Math.round(PHRASE_CRAIE.length * progression);
+    if (n <= 0) return;
+    ctx.fillStyle = '#FFF3DF'; ctx.font = `700 62px ${POLICE_TITRE}`;
+    const lignes = lignesTexte(ctx, PHRASE_CRAIE, l - 80);
+    let reste = n;
+    lignes.forEach((ligne, i) => { const part = ligne.slice(0, Math.max(0, reste)); reste -= ligne.length + 1; ctx.fillText(part, 40, 104 + i * 76); });
+    if (progression >= 1) { ctx.strokeStyle = C.ambre; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(44, 104 + lignes.length * 76 + 6); ctx.lineTo(l - 140, 104 + lignes.length * 76 + 2); ctx.stroke(); }
+  });
+}
+const ardoise = new THREE.Mesh(new THREE.PlaneGeometry(1.66, 1.06), new THREE.MeshLambertMaterial({ map: texCraie }));
+ardoise.position.z = 0.03; tableauNoir.add(ardoise);
+
+// Plante et tabouret pour habiller le studio
+{
+  const pl = new THREE.Group(); pl.position.set(-4.8, 0, -2.5);
+  pl.add(maille(new THREE.CylinderGeometry(0.32, 0.24, 0.55, 7), '#D97B4A', 0, 0.275, 0));
+  [[0, 1.0, 0, 0.45], [0.28, 0.82, 0.1, 0.32], [-0.25, 0.85, -0.05, 0.34], [0.05, 1.35, 0.05, 0.3]].forEach(([x, y, z, r]) => pl.add(maille(new THREE.IcosahedronGeometry(r, 0), choisir([C.vert, '#669B4B']), x, y, z)));
+  scene.add(pl);
+  const tab = new THREE.Group(); tab.position.set(-3.4, 0, -1.9);
+  tab.add(maille(new THREE.CylinderGeometry(0.28, 0.28, 0.07, 8), C.ambre, 0, 0.66, 0));
+  for (let i = 0; i < 3; i++) { const p = maille(new THREE.CylinderGeometry(0.025, 0.025, 0.66, 5), BOIS, Math.cos(i * 2.1) * 0.18, 0.33, Math.sin(i * 2.1) * 0.18); tab.add(p); }
+  scene.add(tab);
+}
+
+/* =====================================================================
+   5. LE PRODUIT : socle, table, bougie, accessoires, ambiance
+   ===================================================================== */
+const HAUT_TABLE = 0.9;
+const texturesAvecTexte = []; // textures redessinées quand les polices sont chargées
+const socle = maille(new THREE.BoxGeometry(0.9, HAUT_TABLE, 0.9), C.rocher, 0, HAUT_TABLE / 2, 0); scene.add(socle);
+// point d’interrogation flottant (avant la bougie)
+const texQuestion = textureCanvas(256, 256, (ctx, l, h) => {
+  ctx.fillStyle = C.creme; rectangleArrondi(ctx, 8, 8, l - 16, h - 16, 50); ctx.fill();
+  ctx.strokeStyle = C.prune; ctx.lineWidth = 12; ctx.stroke();
+  ctx.fillStyle = C.prune; ctx.font = `700 190px ${POLICE_TITRE}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', l / 2, h / 2 + 12);
+});
+texturesAvecTexte.push(texQuestion);
+const pointQuestion = new THREE.Sprite(new THREE.SpriteMaterial({ map: texQuestion, transparent: true }));
+pointQuestion.scale.setScalar(0.5); pointQuestion.userData.echelle = 0.5; pointQuestion.position.set(0, HAUT_TABLE + 0.45, 0); scene.add(pointQuestion);
+
+// Table en bois clair (remplace le socle au moment du décor)
+const table = new THREE.Group(); scene.add(table);
+table.add(maille(new THREE.BoxGeometry(2.0, 0.08, 1.1), BOIS_CLAIR, 0, HAUT_TABLE - 0.04, 0));
+[[-0.9, -0.45], [0.9, -0.45], [-0.9, 0.45], [0.9, 0.45]].forEach(([x, z]) => table.add(maille(new THREE.BoxGeometry(0.08, HAUT_TABLE - 0.08, 0.08), '#C9A274', x, (HAUT_TABLE - 0.08) / 2, z)));
+
+// La bougie : pot ambré, étiquette, cire, mèche, flamme
+const bougie = new THREE.Group(); bougie.position.set(0, HAUT_TABLE, 0); scene.add(bougie);
+{
+  bougie.add(maille(new THREE.CylinderGeometry(0.2, 0.185, 0.36, 10), '#E58A2C', 0, 0.18, 0));
+  bougie.add(maille(new THREE.CylinderGeometry(0.205, 0.205, 0.03, 10), C.ambre, 0, 0.36, 0));
+  bougie.add(maille(new THREE.CylinderGeometry(0.183, 0.183, 0.02, 10), C.creme, 0, 0.345, 0));
+  const texEtiquette = textureCanvas(512, 128, (ctx, l, h) => {
+    ctx.fillStyle = C.creme; ctx.fillRect(0, 0, l, h);
+    ctx.fillStyle = C.encre; ctx.font = `700 46px ${POLICE_TITRE}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('cire de soja', l * 0.25, h / 2); ctx.fillText('cire de soja', l * 0.75, h / 2);
+  });
+  texturesAvecTexte.push(texEtiquette);
+  const etiquette = new THREE.Mesh(new THREE.CylinderGeometry(0.197, 0.192, 0.13, 20, 1, true), new THREE.MeshLambertMaterial({ map: texEtiquette }));
+  etiquette.position.y = 0.17; etiquette.rotation.y = -0.9; bougie.add(etiquette);
+  bougie.add(maille(new THREE.BoxGeometry(0.012, 0.05, 0.012), C.encre, 0, 0.375, 0));
+}
+bougie.userData.echelle = 1;
+const flamme = new THREE.Group(); flamme.position.set(0, HAUT_TABLE + 0.43, 0); scene.add(flamme);
+{
+  const ext = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.13, 7), new THREE.MeshBasicMaterial({ color: '#FFB238' }));
+  const int = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 6), new THREE.MeshBasicMaterial({ color: '#FFF6D8' }));
+  int.position.y = -0.02; flamme.add(ext, int);
+}
+flamme.userData.echelle = 1;
+flammeLumiere.position.set(0, HAUT_TABLE + 0.5, 0.05);
+
+// Accessoires posés au moment du décor
+const accessoires = [];
+{
+  const linge = maille(new THREE.BoxGeometry(0.75, 0.012, 0.5), '#FFFDF7', 0.05, HAUT_TABLE + 0.006, 0.05, false); linge.rotation.y = 0.25; accessoires.push(linge);
+  const euca = new THREE.Group(); euca.position.set(-0.55, HAUT_TABLE + 0.02, -0.1); euca.rotation.y = 0.5;
+  euca.add(maille(new THREE.CylinderGeometry(0.008, 0.008, 0.7, 4), '#5E7F4E', 0, 0, 0).rotateZ(Math.PI / 2));
+  for (let i = 0; i < 9; i++) { const f = maille(new THREE.IcosahedronGeometry(0.055, 0), i % 2 ? '#8DB89A' : '#6FA083', -0.3 + i * 0.075, 0.015, (i % 2 ? 1 : -1) * 0.05); f.scale.set(1, 0.35, 0.8); euca.add(f); }
+  accessoires.push(euca);
+  const boite = new THREE.Group(); boite.position.set(0.5, HAUT_TABLE, 0.22); boite.rotation.y = -0.35;
+  boite.add(maille(new THREE.BoxGeometry(0.22, 0.05, 0.14), C.prune, 0, 0.025, 0));
+  boite.add(maille(new THREE.BoxGeometry(0.2, 0.052, 0.04), C.creme, 0, 0.026, 0));
+  accessoires.push(boite);
+  const petite = new THREE.Group(); petite.position.set(0.48, HAUT_TABLE, -0.25);
+  petite.add(maille(new THREE.CylinderGeometry(0.1, 0.095, 0.16, 9), C.creme, 0, 0.08, 0));
+  petite.add(maille(new THREE.CylinderGeometry(0.103, 0.103, 0.035, 9), BOIS_CLAIR, 0, 0.17, 0));
+  accessoires.push(petite);
+  accessoires.forEach((a) => scene.add(a));
+}
+
+// Bokeh : petites lumières floues devant le fond photo (ambiance)
+const bokeh = [];
+for (let i = 0; i < 22; i++) {
+  const m = new THREE.Mesh(new THREE.CircleGeometry(hasard(0.05, 0.13), 16), new THREE.MeshBasicMaterial({ color: choisir(['#FFD27A', '#FFE9C4', C.ambre]), transparent: true, opacity: 0, depthWrite: false }));
+  m.position.set(hasard(-1.4, 1.4), hasard(1.0, 2.3), -1.35 + hasard(0, 0.1));
+  m.userData = { base: m.position.clone(), ph: hasard(0, 6), op: hasard(0.35, 0.7) };
+  scene.add(m); bokeh.push(m);
+}
+
+/* =====================================================================
+   6. L’ARTISAN (le même que dans « La Course de l’IA »)
+   ===================================================================== */
+function creerPersonnage() {
+  const M = (c) => new THREE.MeshLambertMaterial({ color: c, flatShading: true });
+  const m = { peau: M(C.peau), cheveux: M(C.cheveux), casquette: M(C.bleu), tshirt: M(C.creme), tablier: M(C.ambre),
+              poche: M('#DB8A24'), pantalon: M(C.encre), semelle: M(C.creme), noir: M('#161A30') };
+  const B = (l, h, p) => new THREE.BoxGeometry(l, h, p);
+  const ajoute = (parent, geo, materiau, x, y, z) => { const me = new THREE.Mesh(geo, materiau); me.position.set(x, y, z); me.castShadow = true; parent.add(me); return me; };
+  const racine = new THREE.Group(), corps = new THREE.Group();
+  racine.add(corps); racine.scale.setScalar(ECHELLE_PERSO);
+  const jambes = [-1, 1].map((s) => {
+    const hanche = new THREE.Group(); hanche.position.set(0.11 * s, 0.70, 0); corps.add(hanche);
+    ajoute(hanche, B(0.17, 0.32, 0.19), m.pantalon, 0, -0.16, 0);
+    const genou = new THREE.Group(); genou.position.y = -0.32; hanche.add(genou);
+    ajoute(genou, B(0.16, 0.26, 0.18), m.pantalon, 0, -0.13, 0);
+    ajoute(genou, B(0.19, 0.09, 0.30), m.pantalon, 0, -0.305, -0.045);
+    ajoute(genou, B(0.20, 0.035, 0.31), m.semelle, 0, -0.3675, -0.045);
+    return { hanche, genou };
+  });
+  ajoute(corps, B(0.40, 0.20, 0.24), m.pantalon, 0, 0.74, 0);
+  ajoute(corps, B(0.42, 0.46, 0.25), m.tshirt, 0, 1.06, 0);
+  ajoute(corps, B(0.30, 0.30, 0.03), m.tablier, 0, 1.07, -0.135);
+  [-1, 1].forEach((s) => ajoute(corps, B(0.045, 0.2, 0.03), m.tablier, 0.12 * s, 1.25, -0.13));
+  const jupe = new THREE.Group(); jupe.position.set(0, 0.88, -0.14); corps.add(jupe);
+  ajoute(jupe, B(0.44, 0.40, 0.03), m.tablier, 0, -0.2, 0);
+  ajoute(jupe, B(0.18, 0.12, 0.02), m.poche, 0, -0.17, -0.022);
+  [-1, 1].forEach((s) => { const b = ajoute(corps, B(0.05, 0.56, 0.02), m.tablier, 0, 1.06, 0.135); b.rotation.z = 0.62 * s; });
+  ajoute(corps, B(0.43, 0.05, 0.02), m.tablier, 0, 0.86, 0.135);
+  const bras = [-1, 1].map((s) => {
+    const epaule = new THREE.Group(); epaule.position.set(0.28 * s, 1.25, 0); corps.add(epaule);
+    ajoute(epaule, B(0.15, 0.16, 0.18), m.tshirt, 0, -0.05, 0);
+    ajoute(epaule, new THREE.CylinderGeometry(0.06, 0.055, 0.40, 6), m.peau, 0, -0.27, 0);
+    ajoute(epaule, new THREE.IcosahedronGeometry(0.075, 0), m.peau, 0, -0.5, 0);
+    return epaule;
+  });
+  ajoute(corps, new THREE.CylinderGeometry(0.07, 0.08, 0.1, 6), m.peau, 0, 1.33, 0);
+  const tete = new THREE.Group(); tete.position.y = 1.56; corps.add(tete);
+  ajoute(tete, new THREE.IcosahedronGeometry(0.25, 0), m.peau, 0, 0, 0);
+  ajoute(tete, new THREE.IcosahedronGeometry(0.235, 0), m.cheveux, 0, 0.03, 0.075);
+  [-1, 1].forEach((s) => ajoute(tete, new THREE.IcosahedronGeometry(0.032, 0), m.noir, 0.085 * s, 0.02, -0.222));
+  const sourire = ajoute(tete, new THREE.TorusGeometry(0.06, 0.013, 4, 8, Math.PI), m.noir, 0, -0.06, -0.215);
+  sourire.rotation.z = Math.PI;
+  const casquette = new THREE.Group(); casquette.position.y = 0.1; tete.add(casquette);
+  const dome = ajoute(casquette, new THREE.SphereGeometry(0.27, 7, 4, 0, Math.PI * 2, 0, Math.PI / 2), m.casquette, 0, 0, 0); dome.scale.y = 0.78;
+  ajoute(casquette, B(0.34, 0.035, 0.2), m.casquette, 0, 0.005, -0.31);
+  ajoute(casquette, new THREE.IcosahedronGeometry(0.035, 0), m.casquette, 0, 0.215, 0);
+  return { racine, corps, jambes, bras, jupe, casquette, tete };
+}
+const P = creerPersonnage();
+P.racine.position.set(-1.65, 0, 0.55);
+scene.add(P.racine);
+const ORIENT_CAMERA = Math.PI + 0.45, ORIENT_TABLE = -1.27 + Math.PI * 2;
+const perso = {
+  orientation: ORIENT_CAMERA, orientationCible: ORIENT_CAMERA, special: null, tSpecial: 0, temps: 0,
+  pose: { jambeG: 0, jambeD: 0, genouG: 0, genouD: 0, brasGx: 0, brasDx: 0, ecartG: 0.08, ecartD: 0.08, corpsY: 0, penche: 0, roulis: 0, teteY: 0, casquette: 0, casquetteRot: 0 }
+};
+
+/* ---------- Confettis ---------- */
+const NB_CONFETTIS = 160;
+const confettis = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.09, 0.055), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), NB_CONFETTIS);
+confettis.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+confettis.frustumCulled = false;
+const COULEURS_CONFETTIS = [C.bleu, C.ambre, C.menthe, C.prune, C.vert, C.creme];
+const dataConfettis = [];
+const tmpObjet = new THREE.Object3D(), tmpCouleur = new THREE.Color();
+for (let i = 0; i < NB_CONFETTIS; i++) {
+  dataConfettis.push({ vie: 0, p: new THREE.Vector3(), v: new THREE.Vector3(), r: new THREE.Euler(), vr: new THREE.Vector3() });
+  confettis.setColorAt(i, tmpCouleur.set(COULEURS_CONFETTIS[i % COULEURS_CONFETTIS.length]));
+  tmpObjet.scale.setScalar(0); tmpObjet.updateMatrix(); confettis.setMatrixAt(i, tmpObjet.matrix);
+}
+scene.add(confettis);
+let pluieConfettis = false, reservePluie = 0;
+function lancerConfetti(p, v, vie) {
+  const c = dataConfettis.find((d) => d.vie <= 0);
+  if (!c) return;
+  c.vie = vie; c.p.copy(p); c.v.copy(v);
+  c.r.set(hasard(0, 6), hasard(0, 6), hasard(0, 6)); c.vr.set(hasard(-9, 9), hasard(-9, 9), hasard(-9, 9));
+}
+function explosionConfettis(x, y, z, n, force = 1) {
+  const p = new THREE.Vector3(x, y, z);
+  for (let i = 0; i < n; i++) lancerConfetti(p, new THREE.Vector3(hasard(-2, 2) * force, hasard(2.5, 5) * force, hasard(-1, 2) * force), 1.6);
+}
+function mettreAJourConfettis(dt) {
+  if (pluieConfettis) {
+    reservePluie += dt * 18;
+    while (reservePluie >= 1) { reservePluie -= 1; lancerConfetti(new THREE.Vector3(hasard(-3.5, 3.5), 4.5, hasard(-2, 2)), new THREE.Vector3(hasard(-0.3, 0.3), hasard(-1.2, -0.6), 0), 6); }
+  }
+  for (let i = 0; i < NB_CONFETTIS; i++) {
+    const c = dataConfettis[i];
+    if (c.vie > 0) {
+      c.vie -= dt;
+      c.v.y -= 5 * dt; c.v.multiplyScalar(1 - 1.6 * dt);
+      if (c.v.y < -1.6) c.v.y = -1.6;
+      c.p.addScaledVector(c.v, dt);
+      c.r.x += c.vr.x * dt; c.r.y += c.vr.y * dt; c.r.z += c.vr.z * dt;
+      tmpObjet.position.copy(c.p); tmpObjet.rotation.copy(c.r);
+      tmpObjet.scale.setScalar(c.vie > 0 && c.p.y > 0 ? Math.min(1, c.vie * 3) : 0);
+    } else tmpObjet.scale.setScalar(0);
+    tmpObjet.updateMatrix(); confettis.setMatrixAt(i, tmpObjet.matrix);
+  }
+  confettis.instanceMatrix.needsUpdate = true;
+}
+function viderConfettis() { dataConfettis.forEach((c) => (c.vie = 0)); pluieConfettis = false; }
+
+/* =====================================================================
+   7. LES EFFETS : ce que chaque bonne réponse ajoute au studio
+   ===================================================================== */
+const studio = { construit: {}, photo: null, demandeCapture: false, plan: 'accueil', orbite: 0 };
+const EFFETS = {
+  lumieres: {
+    duree: () => D.construction,
+    debut() { lum.cible = 1; dessinerEcran(true); Son.lumiere(); }
+  },
+  persona: {
+    duree: () => D.construction,
+    debut() { persona.userData.echelle = 1; apparaitre(persona, 0.15, 0.6); Son.pop(); }
+  },
+  appel: {
+    duree: () => D.construction + 0.4,
+    debut() { Son.craie(); animer(1.4, (k) => dessinerCraie(k), 0.1); }
+  },
+  sujet: {
+    duree: () => D.construction,
+    debut() {
+      animer(0.3, (k) => pointQuestion.scale.setScalar(Math.max(0.0001, 0.5 * (1 - k))));
+      apparaitre(bougie, 0.25, 0.6); Son.pop();
+      plusTard(0.4, () => explosionConfettis(0, HAUT_TABLE + 0.6, 0.2, 30, 0.6));
+    }
+  },
+  decor: {
+    duree: () => D.construction + 0.4,
+    debut() {
+      table.visible = true; table.scale.set(1, 0.0001, 1);
+      animer(0.6, (k) => { table.scale.y = Math.max(0.0001, doux(k)); socle.scale.set(1 - k, 1 - k * 0.02, 1 - k); if (k >= 1) socle.visible = false; });
+      accessoires.forEach((a, i) => apparaitre(a, 0.6 + i * 0.22, 0.45));
+      Son.pop(); plusTard(0.7, () => Son.pop()); plusTard(1.0, () => Son.pop());
+    }
+  },
+  ambiance: {
+    duree: () => D.construction + 0.4,
+    debut() { lum.chaudCible = 1; apparaitre(flamme, 0.35, 0.5); Son.allumette(); }
+  },
+  cadrage: {
+    duree: () => D.cadrage,
+    debut() { studio.plan = 'gros-plan'; el.hud.classList.add('cinema'); },
+    maj(t) {
+      if (t > 1.3 && !this.viseur) { this.viseur = true; $('viseur').classList.remove('video'); $('viseur-texte').textContent = 'PHOTO'; montrer($('viseur'), true); }
+      if (t > 2.2 && !this.clic) {
+        this.clic = true; Son.declencheur(); studio.demandeCapture = true;
+        const f = $('flash'); f.style.transition = 'none'; f.style.opacity = '0.9';
+        requestAnimationFrame(() => requestAnimationFrame(() => { f.style.transition = 'opacity .6s'; f.style.opacity = '0'; }));
+      }
+      if (t > D.cadrage - 1.0 && !this.retour) { this.retour = true; montrer($('viseur'), false); studio.plan = 'studio'; el.hud.classList.remove('cinema'); }
+    },
+    reset() { this.viseur = this.clic = this.retour = false; }
+  },
+  orbite: {
+    duree: () => D.orbite,
+    debut() { studio.plan = 'orbite'; studio.orbite = 0; el.hud.classList.add('cinema'); Son.moteur(); $('viseur').classList.add('video'); $('viseur-texte').textContent = 'REC'; montrer($('viseur'), true); },
+    maj(t) {
+      studio.orbite = clamp((t - 0.4) / (D.orbite - 1.4), 0, 1);
+      const s = Math.floor(t); $('viseur-texte').textContent = `REC 00:0${Math.min(9, s)}`;
+      if (t > D.orbite - 0.9 && !this.retour) { this.retour = true; montrer($('viseur'), false); studio.plan = 'studio'; el.hud.classList.remove('cinema'); }
+    },
+    reset() { this.retour = false; }
+  }
+};
+// Construit tout de suite un élément (utile si une étape a été retirée de CONFIG)
+function construireInstantane(nom) {
+  if (nom === 'lumieres') { lum.cible = lum.niveau = 1; dessinerEcran(true); }
+  if (nom === 'persona') { persona.visible = true; persona.scale.setScalar(1); }
+  if (nom === 'appel') dessinerCraie(1);
+  if (nom === 'sujet') { bougie.visible = true; bougie.scale.setScalar(1); pointQuestion.visible = false; }
+  if (nom === 'decor') { table.visible = true; table.scale.set(1, 1, 1); socle.visible = false; accessoires.forEach((a) => { a.visible = true; a.scale.setScalar(1); }); }
+  if (nom === 'ambiance') { lum.chaud = lum.chaudCible = 1; flamme.visible = true; flamme.scale.setScalar(1); }
+  studio.construit[nom] = true;
+}
+function reinitialiserStudio() {
+  anims.length = 0;
+  studio.construit = {}; studio.photo = null; studio.demandeCapture = false; studio.orbite = 0;
+  lum.cible = 0.1; lum.chaud = lum.chaudCible = 0;
+  dessinerEcran(false); dessinerCraie(0);
+  persona.visible = false;
+  bougie.visible = false; flamme.visible = false;
+  pointQuestion.visible = true; pointQuestion.scale.setScalar(0.5);
+  table.visible = false; socle.visible = true; socle.scale.set(1, 1, 1);
+  accessoires.forEach((a) => (a.visible = false));
+  Object.values(EFFETS).forEach((e) => e.reset && e.reset());
+  montrer($('viseur'), false); el.hud.classList.remove('cinema');
+}
+// Studio de l’accueil : allumé, avec la bougie, pour donner envie
+function studioAccueil() {
+  reinitialiserStudio();
+  lum.cible = lum.niveau = 0.85;
+  ['persona', 'appel', 'sujet', 'decor', 'ambiance'].forEach(construireInstantane);
+  studio.construit = {};
+}
+
+/* =====================================================================
+   8. INTERFACE (HTML par-dessus la 3D)
+   ===================================================================== */
+const ui = $('ui');
+const el = {
+  hud: $('hud'), pillEtape: $('pill-etape'), pillScore: $('pill-score'), theme: $('theme'),
+  texteQuestion: $('texte-question'), progression: $('progression'), barre: $('progression-barre'),
+  cartes: [...document.querySelectorAll('.carte')], btnValider: $('btn-valider'), briefListe: $('brief-liste'), etapes: $('etapes'),
+  retour: $('retour'), retourTitre: $('retour-titre'), retourSous: $('retour-sous'), annonceScene: $('annonce-scene'),
+  accueil: $('ecran-accueil'), explication: $('ecran-explication'), fin: $('ecran-fin'), pause: $('ecran-pause'),
+  btnJouer: $('btn-jouer'), btnContinuer: $('btn-continuer'), btnRejouer: $('btn-rejouer'), btnReprendre: $('btn-reprendre'),
+  btnSon: $('btn-son'), btnPleinEcran: $('btn-plein-ecran'), annonce: $('annonce')
+};
+const montrer = (e, oui) => e.classList.toggle('visible', oui);
+function annoncer(texte) { el.annonce.textContent = texte; }
+
+$('journee').textContent = T.journee;
+$('logo-l1').textContent = T.titreLigne1; $('logo-l2').textContent = T.titreLigne2;
+$('accueil-accroche').textContent = typo(T.accueilAccroche); $('accueil-groupe').textContent = typo(T.accueilGroupe);
+$('aide-choisir').textContent = T.aideChoisir; $('aide-valider').textContent = T.aideValider;
+$('aide-tactile-choisir').textContent = T.aideTactileChoisir; $('aide-tactile-valider').textContent = T.aideTactileValider;
+el.btnJouer.textContent = T.boutonJouer;
+el.btnValider.innerHTML = `${T.boutonValider}<kbd>Espace</kbd>`;
+el.btnContinuer.innerHTML = `${T.boutonContinuer}<kbd>Espace</kbd>`;
+el.btnRejouer.innerHTML = `${T.boutonRejouer}<kbd>Espace</kbd>`;
+$('pause-titre').textContent = T.pause; el.btnReprendre.innerHTML = `${T.boutonReprendre}<kbd>Espace</kbd>`;
+$('expl-saviez').textContent = T.saviezVous;
+$('brief-titre').textContent = T.briefTitre;
+$('post-avatar').textContent = T.postNom.split(' ').map((m) => m[0]).join('').slice(0, 2).toUpperCase();
+$('post-nom').textContent = T.postNom; $('post-sous').textContent = T.postSousTitre;
+$('post-legende').textContent = typo(T.postLegende);
+$('fin-cle').textContent = typo(T.messageCle);
+el.btnPleinEcran.innerHTML = ICONES.pleinEcran;
+if (!document.fullscreenEnabled) el.btnPleinEcran.classList.add('cache');
+
+const erreursConfig = verifierConfig();
+if (erreursConfig.length) {
+  $('erreurs-config').innerHTML = '<br>Erreur dans CONFIG :<br>' + erreursConfig.map((t) => '• ' + t).join('<br>');
+  $('erreurs-config').classList.remove('cache');
+  el.btnJouer.disabled = true;
+}
+
+function majBoutonSon() {
+  el.btnSon.innerHTML = Son.muet ? ICONES.muet : ICONES.son;
+  const t = Son.muet ? 'Activer le son' : 'Couper le son';
+  el.btnSon.title = t; el.btnSon.setAttribute('aria-label', t);
+}
+function majBoutonPleinEcran() {
+  const plein = !!document.fullscreenElement;
+  el.btnPleinEcran.innerHTML = plein ? ICONES.quitterPleinEcran : ICONES.pleinEcran;
+  const t = plein ? 'Quitter le plein écran' : 'Plein écran';
+  el.btnPleinEcran.title = t; el.btnPleinEcran.setAttribute('aria-label', t);
+}
+majBoutonSon();
+
+// Brief : une case par étape, regroupées par thème
+function construireBrief() {
+  let html = '', themePrec = null;
+  CONFIG.questions.forEach((q, i) => {
+    if (q.theme !== themePrec) { html += `<div class="brief-groupe">${typo(T.themes[q.theme] || q.theme)}</div>`; themePrec = q.theme; }
+    html += `<div class="case" id="case-${i}"><span class="num">${i + 1}</span><div class="contenu"><div class="lib">${typo(q.etape || '')}</div><div class="val">…</div></div></div>`;
+  });
+  el.briefListe.innerHTML = html;
+  el.etapes.innerHTML = CONFIG.questions.map((q, i) => `<div class="etape-point" id="point-${i}">${i + 1}</div>`).join('');
+}
+construireBrief();
+function majBrief() {
+  CONFIG.questions.forEach((q, i) => {
+    const r = etat.resultats[i], c = $('case-' + i), p = $('point-' + i);
+    const enCours = i === etat.index && r === undefined;
+    c.classList.toggle('encours', enCours); p.classList.toggle('encours', enCours);
+    c.classList.toggle('ok', r === true); c.classList.toggle('ko', r === false);
+    p.classList.toggle('ok', r === true); p.classList.toggle('ko', r === false);
+    c.querySelector('.num').textContent = r === true ? '✓' : r === false ? '↺' : i + 1;
+  });
+}
+function remplirCase(i) {
+  const c = $('case-' + i);
+  c.classList.add('remplie'); c.querySelector('.val').textContent = typo(CONFIG.questions[i].brief || '');
+  c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+}
+
+// Mise à l’échelle de l’interface (1920 × 1080 ou 1080 × 1920) et du rendu 3D
+const VUE = { portrait: false, decalageX: 0, decalageY: 0 };
+function redimensionner() {
+  const l = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(l, h, false);
+  camera.aspect = l / h;
+  VUE.portrait = h > l;
+  document.body.classList.toggle('portrait', VUE.portrait);
+  const LU = VUE.portrait ? 1080 : 1920, HU = VUE.portrait ? Math.max(1920, Math.round(1080 * h / l)) : 1080;
+  ui.style.width = LU + 'px'; ui.style.height = HU + 'px';
+  const s = Math.min(l / LU, h / HU);
+  ui.style.transform = `translate(${(l - LU * s) / 2}px, ${(h - HU * s) / 2}px) scale(${s})`;
+}
+window.addEventListener('resize', redimensionner);
+redimensionner();
+
+function textesPills() {
+  el.pillEtape.textContent = `${T.etape} ${Math.min(etat.index + 1, NB)} / ${NB}`;
+  el.pillScore.textContent = `${T.score} ${etat.score} / ${NB}`;
+}
+function remplirQuestion() {
+  const q = CONFIG.questions[etat.index];
+  el.theme.className = q.theme;
+  el.theme.innerHTML = `${ICONES[q.theme] || ''}${typo(T.themes[q.theme] || q.theme)}`;
+  el.texteQuestion.textContent = typo(q.question);
+  etat.ordre.forEach((r, c) => {
+    const carte = el.cartes[c], l = REPONSES[c];
+    carte.style.setProperty('--c', l.couleur);
+    carte.className = 'carte';
+    const tete = carte.querySelector('.carte-tete');
+    tete.style.background = l.couleur; tete.style.color = l.texte;
+    tete.innerHTML = `${l.lettre}${svgForme(l.forme, l.texte, 30)}`;
+    carte.querySelector('.carte-corps').textContent = typo(q.reponses[r]);
+    carte.querySelector('.badge').textContent = '';
+    carte.setAttribute('aria-label', `Réponse ${l.lettre} : ${q.reponses[r]}`);
+  });
+}
+function majSelection() {
+  if (etat.phase === 'question') el.cartes.forEach((carte, c) => {
+    carte.classList.toggle('actuelle', c === etat.selection);
+    carte.querySelector('.badge').textContent = c === etat.selection ? T.etiquetteChoisie : '';
+  });
+  const actif = etat.phase === 'question' && etat.selection !== null;
+  el.btnValider.disabled = !actif;
+  el.btnValider.classList.toggle('invisible', etat.phase !== 'question');
+}
+
+/* =====================================================================
+   9. DÉROULEMENT DU JEU
+   ===================================================================== */
+const etat = {
+  phase: 'accueil', t: 0, index: 0, score: 0, resultats: [], ordre: [0, 1, 2, 3],
+  selection: null, choix: null, ok: false, dernierTic: 99, phaseAvantPause: null, derniereAction: 0, effet: null
+};
+const PHASES_JEU = ['question', 'verdict', 'reponse', 'construction'];
+
+function entrerPhase(phase) {
+  etat.phase = phase; etat.t = 0;
+  if (phase === 'explication') ouvrirExplication();
+  if (phase === 'construction') commencerConstruction();
+  if (phase === 'fin') ouvrirFin();
+  majSelection();
+}
+
+function demarrerPartie() {
+  Son.init(); Son.demarrage();
+  Object.assign(etat, { score: 0, resultats: [] });
+  reinitialiserStudio(); viderConfettis();
+  CONFIG.questions.forEach((q, i) => { const c = $('case-' + i); c.classList.remove('remplie', 'flash'); c.querySelector('.val').textContent = '…'; });
+  montrer(el.accueil, false); montrer(el.fin, false); montrer(el.explication, false);
+  el.hud.classList.remove('masque');
+  studio.plan = 'studio';
+  perso.orientationCible = ORIENT_CAMERA;
+  commencerQuestion(0);
+}
+
+function commencerQuestion(i) {
+  etat.index = i; etat.selection = null; etat.choix = null;
+  etat.ordre = melanger([0, 1, 2, 3]);
+  remplirQuestion(); textesPills(); majBrief();
+  el.progression.classList.toggle('sans-limite', !(CONFIG.tempsReponse > 0));
+  el.progression.classList.remove('urgent'); el.barre.style.transform = 'scaleX(1)';
+  etat.dernierTic = 99;
+  entrerPhase('question');
+  annoncer(`${T.etape} ${i + 1} : ${CONFIG.questions[i].question}`);
+}
+
+function choisirReponse(c) {
+  if (etat.phase !== 'question' || c < 0 || c > 3) return;
+  if (etat.selection === c && etat.derniereSelection && performance.now() - etat.derniereSelection > 350) { valider(); return; } // 2e clic sur la même carte = valider
+  etat.selection = c; etat.derniereSelection = performance.now();
+  Son.selection(); majSelection();
+}
+function deplacerSelection(sens) {
+  if (etat.phase !== 'question') return;
+  if (etat.selection === null) { etat.selection = sens > 0 ? 0 : 3; Son.selection(); majSelection(); return; }
+  const c = etat.selection + sens;
+  if (c < 0 || c > 3) { Son.bord(); return; }
+  etat.selection = c; Son.selection(); majSelection();
+}
+function valider(tempsEcoule = false) {
+  if (etat.phase !== 'question') return;
+  if (etat.selection === null && !tempsEcoule) return;
+  etat.choix = etat.selection;
+  etat.tempsEcoule = tempsEcoule && etat.selection === null;
+  if (etat.choix !== null) { el.cartes[etat.choix].classList.add('validee'); Son.valider(); }
+  entrerPhase('verdict');
+}
+function reveler() {
+  const q = CONFIG.questions[etat.index];
+  const bonneCarte = etat.ordre.indexOf(q.bonne - 1);
+  etat.ok = etat.choix === bonneCarte;
+  etat.resultats[etat.index] = etat.ok;
+  el.cartes.forEach((carte, c) => {
+    carte.classList.remove('actuelle', 'validee');
+    if (c === bonneCarte) { carte.classList.add('bonne'); carte.querySelector('.badge').textContent = '✓ ' + T.etiquetteBonne; }
+    else if (c === etat.choix) { carte.classList.add('choisie'); carte.querySelector('.badge').textContent = '✗ ' + T.etiquetteChoisie; }
+    else carte.classList.add('estompee');
+  });
+  el.retour.className = etat.ok ? 'ok' : 'ko';
+  el.retourTitre.textContent = typo(etat.ok ? choisir(T.bravo) : etat.tempsEcoule ? T.tempsEcoule : choisir(T.rate));
+  el.retourSous.textContent = typo(etat.ok ? T.bravoSousTitre : T.rateSousTitre);
+  montrer(el.retour, true);
+  if (etat.ok) {
+    etat.score++; Son.bonne();
+    perso.special = 'saut'; perso.tSpecial = 0;
+    explosionConfettis(P.racine.position.x, 1.8, P.racine.position.z, 50);
+  } else {
+    Son.mauvaise(); perso.special = 'oups'; perso.tSpecial = 0;
+  }
+  textesPills(); majBrief();
+  annoncer(etat.ok ? 'Bonne réponse !' : `La bonne réponse était : ${q.reponses[q.bonne - 1]}`);
+  entrerPhase('reponse');
+}
+
+function ouvrirExplication() {
+  const q = CONFIG.questions[etat.index];
+  const bonneCarte = etat.ordre.indexOf(q.bonne - 1);
+  montrer(el.retour, false);
+  $('expl-titre').textContent = el.retourTitre.textContent;
+  $('expl-etiquette-bonne').textContent = '✓ ' + T.etiquetteBonne;
+  $('expl-pastille-bonne').innerHTML = pastilleReponse(bonneCarte);
+  $('expl-bonne').textContent = typo(q.reponses[q.bonne - 1]);
+  $('expl-etiquette-choisie').textContent = '✗ ' + T.etiquetteChoisie;
+  if (etat.choix === null) { $('expl-pastille-choisie').innerHTML = ''; $('expl-choisie').textContent = T.pasDeReponse; }
+  else { $('expl-pastille-choisie').innerHTML = pastilleReponse(etat.choix); $('expl-choisie').textContent = typo(q.reponses[etat.ordre[etat.choix]]); }
+  $('expl-choisie').parentElement.classList.toggle('cache', etat.ok);
+  $('expl-texte').textContent = typo(q.explication || '');
+  el.btnContinuer.disabled = true;
+  montrer(el.explication, true);
+}
+function fermerExplication() {
+  if (etat.phase !== 'explication' || el.btnContinuer.disabled) return;
+  montrer(el.explication, false); Son.clic();
+  entrerPhase('construction');
+}
+
+function commencerConstruction() {
+  montrer(el.retour, false);
+  const q = CONFIG.questions[etat.index];
+  remplirCase(etat.index);
+  etat.effet = q.effet && EFFETS[q.effet] && !studio.construit[q.effet] ? EFFETS[q.effet] : null;
+  etat.dureeConstruction = etat.effet ? etat.effet.duree() : 1.2;
+  if (etat.effet) { etat.effet.reset && etat.effet.reset(); etat.effet.debut(); studio.construit[q.effet] = true; }
+  if (q.annonceScene && etat.effet && !['cadrage', 'orbite'].includes(q.effet)) {
+    el.annonceScene.innerHTML = `${ICONES.etincelle}${typo(q.annonceScene)}`;
+    plusTard(0.15, () => { if (etat.phase === 'construction') montrer(el.annonceScene, true); });
+  }
+  perso.orientationCible = ORIENT_TABLE; perso.special = null;
+}
+function finirConstruction() {
+  montrer(el.annonceScene, false);
+  perso.orientationCible = ORIENT_CAMERA;
+  if (etat.index + 1 < NB) commencerQuestion(etat.index + 1);
+  else entrerPhase('fin');
+}
+
+function ouvrirFin() {
+  // Tout ce qui n’a pas été construit (étapes retirées de CONFIG) l’est maintenant
+  ['lumieres', 'persona', 'appel', 'sujet', 'decor', 'ambiance'].forEach((n) => { if (!studio.construit[n]) construireInstantane(n); });
+  el.hud.classList.add('masque');
+  studio.plan = 'fin';
+  perso.orientationCible = Math.PI;
+  const tiers = T.finTiers.slice().sort((a, b) => a.min - b.min).filter((x) => etat.score >= x.min);
+  $('fin-titre').textContent = typo(T.finTitre);
+  $('fin-score').textContent = `${etat.score} / ${NB}`;
+  $('fin-points').innerHTML = etat.resultats.map((r, i) => `<span class="point ${r ? 'ok' : 'ko'}">${i + 1} ${r ? '✓' : '✗'}</span>`).join('');
+  $('fin-message').textContent = typo(tiers.length ? tiers[tiers.length - 1].message : '');
+  const morceaux = CONFIG.questions.filter((q) => q.theme === 'image').map((q) => q.brief).filter(Boolean);
+  $('fin-prompt').innerHTML = `<b>${typo(T.finPrompt)}</b>« ${typo(morceaux.join(', '))}. »`;
+  $('fin-prompt').classList.toggle('cache', !morceaux.length);
+  if (!studio.photo) studio.demandeCaptureFin = true;
+  else $('post-photo').src = studio.photo;
+  montrer(el.fin, true);
+  pluieConfettis = true;
+  Son.fin();
+  annoncer(`Score : ${etat.score} sur ${NB}. ${T.messageCle}`);
+}
+
+function basculerPause() {
+  if (etat.phase === 'pause') {
+    etat.phase = etat.phaseAvantPause; montrer(el.pause, false); Son.clic();
+  } else if (etat.phase === 'question' || etat.phase === 'explication') {
+    etat.phaseAvantPause = etat.phase; etat.phase = 'pause'; montrer(el.pause, true); Son.clic();
+  }
+}
+
+/* ---------- Commandes ---------- */
+function actionPrincipale() {
+  const maintenant = performance.now();
+  if (maintenant - etat.derniereAction < 300) return;
+  etat.derniereAction = maintenant;
+  if (etat.phase === 'accueil' && !el.btnJouer.disabled) demarrerPartie();
+  else if (etat.phase === 'question') valider();
+  else if (etat.phase === 'explication') fermerExplication();
+  else if (etat.phase === 'fin' && etat.t > D.fonduFin) demarrerPartie();
+  else if (etat.phase === 'pause') basculerPause();
+}
+function basculerPleinEcran() {
+  if (!document.fullscreenElement) { const r = document.documentElement.requestFullscreen?.(); if (r) r.catch(() => {}); }
+  else document.exitFullscreen?.();
+}
+window.addEventListener('keydown', (ev) => {
+  Son.init();
+  const k = ev.key.toLowerCase(), code = ev.code;
+  if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'enter'].includes(k) || code === 'Space') ev.preventDefault();
+  if (ev.repeat) return;
+  if (k === 'arrowleft' || k === 'q' || code === 'KeyA') { deplacerSelection(-1); return; }
+  if (k === 'arrowright' || k === 'd' || code === 'KeyD') { deplacerSelection(1); return; }
+  if (/^(Digit|Numpad)[1-4]$/.test(code)) { if (etat.phase === 'question') { etat.selection = Number(code.slice(-1)) - 1; Son.selection(); majSelection(); } return; }
+  if (code === 'Space' || k === ' ' || k === 'enter') { actionPrincipale(); return; }
+  if (k === 'f') basculerPleinEcran();
+  else if (k === 'm') { Son.basculer(); majBoutonSon(); }
+  else if (k === 'escape' || k === 'p') basculerPause();
+});
+document.querySelectorAll('#ui button').forEach((b) => b.addEventListener('mousedown', (e) => e.preventDefault()));
+el.btnJouer.addEventListener('click', () => { if (etat.phase === 'accueil') { etat.derniereAction = performance.now(); demarrerPartie(); } });
+el.btnValider.addEventListener('click', () => { Son.init(); valider(); });
+el.btnContinuer.addEventListener('click', fermerExplication);
+el.btnRejouer.addEventListener('click', () => { if (etat.phase === 'fin') { etat.derniereAction = performance.now(); demarrerPartie(); } });
+el.btnReprendre.addEventListener('click', () => { if (etat.phase === 'pause') basculerPause(); });
+el.btnSon.addEventListener('click', () => { Son.init(); Son.basculer(); majBoutonSon(); Son.clic(); });
+el.btnPleinEcran.addEventListener('click', () => { Son.init(); basculerPleinEcran(); });
+document.addEventListener('fullscreenchange', majBoutonPleinEcran);
+el.cartes.forEach((carte, c) => carte.addEventListener('click', () => { Son.init(); choisirReponse(c); }));
+
+// iPhone : empêche le zoom par double-tap ou par pincement
+let dernierToucher = 0;
+document.addEventListener('touchend', (e) => {
+  const maintenant = Date.now();
+  if (maintenant - dernierToucher < 350) e.preventDefault();
+  dernierToucher = maintenant;
+}, { passive: false });
+document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
+['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => document.addEventListener(t, (e) => e.preventDefault(), { passive: false }));
+document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+if (window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0 || 'ontouchstart' in window) document.body.classList.add('tactile');
+window.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch') document.body.classList.add('tactile'); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && etat.phase === 'question') basculerPause(); });
+
+/* =====================================================================
+   10. ANIMATION IMAGE PAR IMAGE
+   ===================================================================== */
+function calculerPose(mode, t) {
+  const p = { jambeG: 0, jambeD: 0, genouG: 0, genouD: 0, brasGx: 0, brasDx: 0, ecartG: 0.08, ecartD: 0.08, corpsY: 0, penche: 0, roulis: 0, teteY: 0, casquette: 0, casquetteRot: 0 };
+  if (mode === 'attente') {                       // accueil : salue de la main
+    p.corpsY = 0.012 + Math.sin(t * 4) * 0.012;
+    p.brasDx = 2.75; p.ecartD = 0.25 + Math.sin(t * 7) * 0.35;
+  } else if (mode === 'reflechit') {              // pendant la question : main au menton
+    p.corpsY = 0.01 + Math.sin(t * 2.6) * 0.01;
+    p.brasDx = 2.25; p.ecartD = -0.35; p.brasGx = 0.5; p.ecartG = -0.5;
+    p.teteY = Math.sin(t * 1.3) * 0.25; p.roulis = Math.sin(t * 1.3) * 0.04;
+  } else if (mode === 'pointe') {                 // construction : montre la table
+    p.corpsY = 0.01; p.brasDx = 1.5; p.ecartD = -0.1; p.penche = -0.05;
+  } else if (mode === 'arret') {
+    p.corpsY = 0.01 + Math.sin(t * 3.9) * 0.01;
+  } else if (mode === 'saut') {                   // bonne réponse : saut de joie
+    const b = Math.sin(Math.PI * clamp(t / 0.5, 0, 1));
+    p.corpsY = 0.5 / ECHELLE_PERSO * b;
+    p.brasGx = 2.8; p.brasDx = 2.8; p.ecartG = 0.3; p.ecartD = 0.3;
+    p.jambeG = 0.35 * b; p.genouG = -0.6 * b; p.genouD = -0.4 * b;
+  } else if (mode === 'oups') {                   // mauvaise réponse : se gratte la tête
+    const u = clamp(t / 1.1, 0, 1), b = Math.sin(Math.PI * u);
+    p.brasDx = 2.7 * b; p.ecartD = (0.1 + Math.sin(t * 16) * 0.12) * b;
+    p.teteY = Math.sin(t * 9) * 0.3 * b; p.roulis = 0.08 * b; p.corpsY = -0.02 * b;
+  } else if (mode === 'fete') {
+    const c = t % 2;
+    if (c < 1) {
+      const b = Math.sin(Math.PI * ((c % 0.5) / 0.5));
+      p.corpsY = 0.35 * b; p.brasGx = 2.8; p.brasDx = 2.8; p.ecartG = 0.35; p.ecartD = 0.35; p.genouG = p.genouD = -0.4 * b;
+    } else {
+      p.brasDx = 2.9; p.ecartD = 0.15 + Math.sin(t * 10) * 0.25; p.casquette = 1; p.casquetteRot = Math.sin(t * 10) * 0.3; p.corpsY = 0.01;
+    }
+  }
+  return p;
+}
+function mettreAJourPersonnage(dt) {
+  perso.temps += dt;
+  perso.orientation = lerp(perso.orientation, perso.orientationCible, 1 - Math.exp(-dt * 6));
+  P.racine.rotation.y = perso.orientation;
+  if (perso.special) { perso.tSpecial += dt; if (perso.tSpecial >= (perso.special === 'saut' ? 0.5 : 1.1)) perso.special = null; }
+  let mode;
+  if (perso.special) mode = perso.special;
+  else if (etat.phase === 'accueil') mode = 'attente';
+  else if (etat.phase === 'question' || etat.phase === 'verdict') mode = 'reflechit';
+  else if (etat.phase === 'construction') mode = 'pointe';
+  else if (etat.phase === 'fin') mode = 'fete';
+  else mode = 'arret';
+  const cible = calculerPose(mode, mode === perso.special ? perso.tSpecial : perso.temps);
+  const k = 1 - Math.exp(-dt * 14);
+  const p = perso.pose;
+  for (const cle in cible) p[cle] = lerp(p[cle], cible[cle], k);
+  P.jambes[0].hanche.rotation.x = p.jambeG; P.jambes[1].hanche.rotation.x = p.jambeD;
+  P.jambes[0].genou.rotation.x = p.genouG;  P.jambes[1].genou.rotation.x = p.genouD;
+  P.bras[0].rotation.x = p.brasGx; P.bras[0].rotation.z = -p.ecartG;
+  P.bras[1].rotation.x = p.brasDx; P.bras[1].rotation.z = p.ecartD;
+  P.jupe.rotation.x = Math.max(p.jambeG, p.jambeD, 0) * 0.6;
+  P.corps.position.y = p.corpsY;
+  P.corps.rotation.x = p.penche; P.corps.rotation.z = p.roulis;
+  P.tete.rotation.y = p.teteY;
+  P.casquette.position.set(p.casquette * 0.12, 0.1 + p.casquette * 0.32, 0);
+  P.casquette.rotation.z = p.casquetteRot;
+}
+
+// Caméra : plans « accueil », « studio », « gros-plan », « orbite », « fin »
+const camPos = new THREE.Vector3(1, 3, 8), camVise = new THREE.Vector3(0, 1.1, -0.5);
+const vPos = new THREE.Vector3(), vVise = new THREE.Vector3();
+let fovActuel = 42, decalX = 0, decalY = 0;
+function planCamera(t) {
+  const portrait = VUE.portrait, a = camera.aspect;
+  let fov = 42, dx = 0, dy = 0;
+  const bal = Math.sin(t * 0.25) * 0.25;   // léger balancement pour faire vivre la scène
+  switch (studio.plan) {
+    case 'accueil':
+      vPos.set(0.4 + bal, 2.7, 7.4); vVise.set(-0.5, 1.25, -0.6);
+      dx = portrait ? 0 : 0.17; dy = portrait ? -0.2 : 0;
+      break;
+    case 'gros-plan':
+      vPos.set(0.78, HAUT_TABLE + 0.62, 1.6); vVise.set(0, HAUT_TABLE + 0.25, 0); fov = 32;
+      break;
+    case 'orbite': {
+      const ang = 0.45 + doux(studio.orbite) * Math.PI * 2, r = 1.75;
+      vPos.set(Math.sin(ang) * r, HAUT_TABLE + 0.6, Math.cos(ang) * r); vVise.set(0, HAUT_TABLE + 0.25, 0); fov = 34;
+      break;
+    }
+    case 'fin':
+      vPos.set(0.9 + bal, 2.6, 6.6); vVise.set(-0.3, 1.2, -0.6);
+      dx = portrait ? 0 : 0.02; dy = portrait ? 0.02 : 0;
+      break;
+    default: // studio pendant les questions
+      vPos.set(0.5 + bal * 0.6, 2.9, 7.6); vVise.set(-0.2, 1.15, -0.7);
+      dx = portrait ? 0 : -0.1; dy = portrait ? 0.02 : 0.02;
+  }
+  if (portrait) {
+    // Vertical : on recule et on élargit l’angle pour garder la table, l’artisan et les tableaux
+    if (studio.plan === 'fin') vPos.z += 1.6;
+    const hfov = studio.plan === 'gros-plan' || studio.plan === 'orbite' ? 34 : studio.plan === 'fin' ? 50 : studio.plan === 'accueil' ? 40 : 35;
+    fov = clamp(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(hfov / 2)) / a)), 40, 82);
+  } else if (a < 1.6) {
+    fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov / 2)) * 1.6 / a));
+  }
+  return { fov, dx, dy };
+}
+function mettreAJourCamera(dt, t) {
+  const p = planCamera(t);
+  const vitesse = studio.plan === 'orbite' ? 30 : studio.plan === 'gros-plan' ? 3.2 : 2.6;
+  const k = 1 - Math.exp(-dt * vitesse);
+  camPos.lerp(vPos, k); camVise.lerp(vVise, k);
+  fovActuel = lerp(fovActuel, p.fov, k); decalX = lerp(decalX, p.dx, k); decalY = lerp(decalY, p.dy, k);
+  camera.position.copy(camPos); camera.lookAt(camVise);
+  camera.fov = fovActuel;
+  const l = renderer.domElement.width, h = renderer.domElement.height;
+  camera.setViewOffset(l, h, decalX * l, decalY * h, l, h);
+  camera.updateProjectionMatrix();
+}
+function mettreAJourLumieres(dt, t) {
+  lum.niveau = lerp(lum.niveau, lum.cible, 1 - Math.exp(-dt * 5));
+  lum.chaud = lerp(lum.chaud, lum.chaudCible, 1 - Math.exp(-dt * 3));
+  hemi.intensity = lerp(0.3, 1.15, lum.niveau);
+  lampe.intensity = lerp(0.05, 2.1, lum.niveau);
+  hemi.color.copy(COULEUR_FROIDE).lerp(COULEUR_CHAUDE, lum.chaud * 0.8);
+  panneauxLumiere.forEach((m) => m.color.set('#555B74').lerp(tmpCouleur.set('#FFF8E8'), lum.niveau));
+  const vacille = 1 + Math.sin(t * 13) * 0.08 + Math.sin(t * 29) * 0.05;
+  flammeLumiere.intensity = lum.chaud * 2.6 * vacille * (flamme.visible ? 1 : 0);
+  if (flamme.visible) { flamme.children[0].scale.set(1, vacille, 1); flamme.rotation.z = Math.sin(t * 7) * 0.06; }
+  bokeh.forEach((b) => {
+    b.material.opacity = lum.chaud * b.userData.op * (0.75 + 0.25 * Math.sin(t * 1.5 + b.userData.ph));
+    b.position.y = b.userData.base.y + Math.sin(t * 0.6 + b.userData.ph) * 0.05;
+    b.lookAt(camera.position);
+  });
+  pointQuestion.position.y = HAUT_TABLE + 0.45 + Math.sin(t * 2.2) * 0.05;
+}
+
+function mettreAJour(dt) {
+  if (etat.phase === 'pause') return;
+  etat.t += dt;
+  const p = etat.phase;
+  if (p === 'question' && CONFIG.tempsReponse > 0) {
+    const restant = CONFIG.tempsReponse - etat.t;
+    el.barre.style.transform = `scaleX(${clamp(restant / CONFIG.tempsReponse, 0, 1)})`;
+    const urgent = restant <= CONFIG.alerteFin;
+    el.progression.classList.toggle('urgent', urgent);
+    if (urgent && restant > 0) { const s = Math.ceil(restant); if (s !== etat.dernierTic) { etat.dernierTic = s; Son.tic(); } }
+    if (restant <= 0) valider(true);
+  } else if (p === 'verdict') {
+    if (etat.t >= D.suspense) reveler();
+  } else if (p === 'reponse') {
+    if (etat.t >= D.reponse) {
+      if (etat.ok && !CONFIG.explicationSiBonneReponse) entrerPhase('construction');
+      else entrerPhase('explication');
+    }
+  } else if (p === 'explication') {
+    if (etat.t >= D.explicationMin && el.btnContinuer.disabled) el.btnContinuer.disabled = false;
+  } else if (p === 'construction') {
+    if (etat.effet && etat.effet.maj) etat.effet.maj(etat.t);
+    if (etat.t >= etat.dureeConstruction) finirConstruction();
+  }
+}
+
+let dernierTemps = performance.now();
+function boucle(maintenant) {
+  requestAnimationFrame(boucle);
+  const dt = Math.min((maintenant - dernierTemps) / 1000, 0.05);
+  dernierTemps = maintenant;
+  pas(dt, maintenant / 1000);
+}
+function pas(dt, t, rendu = true) {
+  mettreAJour(dt);
+  if (etat.phase !== 'pause') {
+    mettreAJourAnims(dt);
+    mettreAJourPersonnage(dt);
+    mettreAJourConfettis(dt);
+  }
+  mettreAJourLumieres(dt, t);
+  mettreAJourCamera(dt, t);
+  if (!rendu && !studio.demandeCapture && !studio.demandeCaptureFin) return;
+  renderer.render(scene, camera);
+  // La « photo » est prise juste après le rendu (sinon l’image serait vide)
+  if (studio.demandeCapture) {
+    studio.demandeCapture = false;
+    try { studio.photo = renderer.domElement.toDataURL('image/jpeg', 0.9); } catch (e) { /* capture impossible */ }
+  }
+  if (studio.demandeCaptureFin) {
+    studio.demandeCaptureFin = false;
+    try { studio.photo = renderer.domElement.toDataURL('image/jpeg', 0.9); $('post-photo').src = studio.photo; } catch (e) { /* capture impossible */ }
+  }
+}
+
+// Redessine les textures avec les bonnes polices une fois chargées
+if (document.fonts) {
+  Promise.all([document.fonts.load('700 100px Fredoka'), document.fonts.load('900 60px Nunito')]).catch(() => {}).then(() => {
+    [texPersona, ...texturesAvecTexte].forEach((t) => redessiner(t, t.userData.dessin));
+    if (etat.phase === 'accueil') studioAccueil();
+  });
+}
+
+studioAccueil();
+camPos.set(0.4, 2.7, 7.4); camVise.set(-0.5, 1.25, -0.6);
+window.__studioIAPret = true;
+// Accès de test (sans effet sur la partie)
+let tempsTest = 0;
+window.__studioTest = { etat, studio, EFFETS, demarrerPartie, commencerQuestion, choisirReponse, valider, entrerPhase, construireInstantane,
+  avancer(sec) { const n = Math.round(sec * 30); for (let i = 0; i < n; i++) { tempsTest += 1 / 30; pas(1 / 30, tempsTest, i === n - 1); } } };
+requestAnimationFrame(boucle);
+</script>
+
+<script>
+  setTimeout(function () { if (!window.__studioIAPret) document.getElementById('erreur').style.display = 'flex'; }, 8000);
+</script>
+</body>
+</html>
