@@ -100,7 +100,7 @@ const CONFIG = {
   ],
 
   /* ---------- 2. LE TEMPS ---------- */
-  tempsReponse: 25,   // secondes pour répondre (0 = pas de limite). À la fin du temps, la réponse sélectionnée est validée.
+  tempsReponse: 30,   // secondes pour répondre (0 = pas de limite). À la fin du temps, la réponse sélectionnée est validée.
   alerteFin: 5,       // dernières secondes : la barre passe en ambre et le chrono fait tic-tac
 
   /* ---------- 3. LES DURÉES (en secondes) ---------- */
@@ -161,7 +161,8 @@ const CONFIG = {
     etiquetteChoisie: "Votre choix",
     pasDeReponse: "Pas de réponse",
     saviezVous: "Le saviez-vous ?",
-    boutonContinuer: "Continuer",
+    boutonContinuer: "Question suivante →",
+    boutonContinuerDernier: "Voir la vidéo →",
     finTitre: "C’est dans la boîte !",
     finTiers: [
       { min: 0, message: "Bon début ! Avec un brief précis, l’IA fait des merveilles : on s’entraîne cet après-midi." },
@@ -366,8 +367,15 @@ html, body {
 .pastille-couloir { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 14px; border-radius: 12px; font: 700 30px/1 var(--titre); }
 .saviez { display: inline-block; margin-top: 28px; border-bottom: 4px solid var(--ambre); font: 900 26px/1.3 var(--texte); }
 #expl-texte { margin-top: 12px; font: 800 32px/1.35 var(--texte); }
-.actions { display: flex; justify-content: flex-end; margin-top: 28px; }
-#btn-continuer { height: 84px; font-size: 34px !important; }
+.actions { display: flex; justify-content: center; margin-top: 34px; }
+#btn-continuer { height: 112px; min-width: 560px; padding: 0 56px; font-size: 46px !important; }
+#btn-continuer:disabled { opacity: .45; }
+/* Bouton bien visible : il pulse avec un halo ambre dès qu’il est cliquable */
+#btn-continuer:not(:disabled) { animation: appel-suivant 1.3s ease-in-out infinite; }
+@keyframes appel-suivant {
+  0%, 100% { transform: scale(1); box-shadow: 0 7px 0 #1b4a8a, 0 0 0 0 rgba(243, 163, 59, .85), var(--ombre); }
+  50% { transform: scale(1.06); box-shadow: 0 7px 0 #1b4a8a, 0 0 0 20px rgba(243, 163, 59, 0), var(--ombre); }
+}
 
 /* Fin */
 #post { position: absolute; left: 80px; top: 50%; width: 680px; transform: translateY(-50%); border-radius: 26px; background: #fff; box-shadow: 0 18px 44px rgba(32, 39, 68, .3); overflow: hidden; }
@@ -437,6 +445,7 @@ body.portrait #post { left: 50%; top: auto; bottom: 40px; width: 760px; transfor
 body.portrait #post-photo { aspect-ratio: 16 / 9; }
 body.portrait #post-legende { font-size: 28px; }
 body.portrait .carte-explication { width: 1032px; margin-top: 200px; padding: 40px 44px; }
+body.portrait #btn-continuer { width: 100%; height: 130px; font-size: 54px !important; }
 body.portrait #expl-titre { font-size: 64px; }
 body.portrait .ligne-reponse { font-size: 40px; }
 body.portrait .etiquette { font-size: 30px; }
@@ -1457,6 +1466,7 @@ function ouvrirExplication() {
   else { $('expl-pastille-choisie').innerHTML = pastilleReponse(etat.choix); $('expl-choisie').textContent = typo(q.reponses[etat.ordre[etat.choix]]); }
   $('expl-choisie').parentElement.classList.toggle('cache', etat.ok);
   $('expl-texte').textContent = typo(q.explication || '');
+  el.btnContinuer.innerHTML = `${etat.index < NB - 1 ? T.boutonContinuer : T.boutonContinuerDernier}<kbd>Espace</kbd>`;
   el.btnContinuer.disabled = true;
   montrer(el.explication, true);
 }
